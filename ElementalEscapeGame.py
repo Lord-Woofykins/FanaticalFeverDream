@@ -24,11 +24,20 @@ class Player:
     def move(self, x, y):
         self.position = (x, y)
 
+    def draw(self, ):
+        py.draw.rect(screen, color, (self.x, self.y, self.width, self.height))
+
+
 Player("Player1")
 
 class Room():
     def __init__(self, layout):
         self.layout = layout
+        self.width = WIDTH
+        self.height = HEIGHT
+    
+    def updateLayout():
+        pass
 
 
 running = True
