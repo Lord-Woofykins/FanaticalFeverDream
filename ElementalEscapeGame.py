@@ -5,9 +5,8 @@ py.init() # Initialize Pygame Modules
 # Constants
 GREEN = (0, 128, 0)
 
-
 # Setting Up Window
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1100, 800
 
 GRAVITY = 0.5
 GROUND_HEIGHT = 525
@@ -16,6 +15,7 @@ nameOfGame = "Roguelike Shapeshifter TEST"
 
 py.display.set_mode((WIDTH, HEIGHT))
 py.display.set_caption(nameOfGame)
+screen = py.display.get_surface()
 
 clock = py.time.Clock()
 
@@ -29,11 +29,13 @@ class Player:
         self.height = height
 
         self.velocity_y = 0
-
-
-
+        self.velocity_x = 0
 
         print(f"Player {self.name} created at position {self.position}")
+
+    def movePlayer(self, dx=0, dy=0):
+        self.velocity_x += dx
+        # KEEP WORKING ON THIS
 
     def updateGravity(self):
         # Apply gravity
@@ -48,14 +50,32 @@ class Player:
         
         self.position = (x, y)
 
+    
+    def checkCollision(self, platform):
+        selfRect = self.getRect()
+        platformRect = platform.getRect()
+        py.rect.colliderect()
+
+    def getRect(self):
+        x, y = self.position
+        return py.Rect(x - (self.width / 2), y - (self.height / 2), self.width, self.height)
+
     def draw(self):
         x, y = self.position
-        py.draw.rect(py.display.get_surface(), GREEN, ((x - (self.width/2)), (y - (self.height/2)), self.width, self.height))
+        py.draw.rect(screen, GREEN, ((x - (self.width/2)), (y - (self.height/2)), self.width, self.height))
     
-
-
 mainCharacter = Player("Player1")
 mainCharacter.draw()
+
+ground = py.Rect(0, 550, WIDTH, 50)
+rooms = {
+    "Beginning": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+}
+
+platforms = [
+    py.Rect(0, 550, WIDTH, 50)
+]
+
 
 class Room():
     def __init__(self, layout):
@@ -70,14 +90,12 @@ class Room():
 running = True
 while running:
 
-
     # Prepare the screen for next frame
-    py.display.get_surface().fill((0, 0, 0))  # Clear the screen
+    screen.fill((0, 0, 0))  # Clear the screen
     clock.tick(60) # Limit the frame rate to 60 FPS
 
     # Draw the environment/room -- TEMPORARY
-    py.draw.rect(py.display.get_surface(), (100, 100, 100), (0, 550, 800, 50))
-
+    py.draw.rect(screen, (100, 100, 100), ground)
 
 
     # Respond to player input
@@ -85,6 +103,13 @@ while running:
         # Quit the game
         if event.type == py.QUIT:
             running = False
+        if event.type == py.KEYDOWN:
+            if event.key == py.K_d:
+                mainCharacter.movePlayer()  # Move right
+
+    for platform in platforms:
+        pass
+
 
 
     mainCharacter.updateGravity()
