@@ -35,17 +35,20 @@ class Player:
 
     def movePlayer(self, acceleration_x):
         self.velocity_x += acceleration_x
-        self.velocity_x = max(-10, min(self.velocity_x, 10))  # Limit horizontal speed
+        self.velocity_x = max(-10, min(self.velocity_x, 10))  # Limit horizontal speed by: max(absolute minimum, actual speed capped at maximum)-> restricted velocity
         x, y = self.position
-        x += self.velocity_x
+        future_x = x + self.velocity_x
 
         # Check for screen boundaries
-        if 
+        if future_x < (0 + self.width / 2):
+            future_x = (0 + self.width / 2)
+        elif future_x > (WIDTH - (self.width / 2)):
+            future_x = (WIDTH - (self.width / 2))
+        
+        self.position = (future_x, y)
 
-        """
         if acceleration_x == 0:
             self.velocity_x = 0  # Stop horizontal movement if no input
-        """
         
         
         
@@ -116,9 +119,12 @@ while running:
         # Quit the game
         if event.type == py.QUIT:
             running = False
-        if event.type == py.KEYDOWN:
-            if event.key == py.K_d:
-                mainCharacter.movePlayer()  # Move right
+    
+    keys = py.key.get_pressed()
+    if keys[py.K_a]:
+        mainCharacter.movePlayer(-1)  # Move left
+    if keys[py.K_d]:
+        mainCharacter.movePlayer(1)
 
     for platform in platforms:
         pass
