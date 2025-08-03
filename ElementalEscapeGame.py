@@ -33,9 +33,22 @@ class Player:
 
         print(f"Player {self.name} created at position {self.position}")
 
-    def movePlayer(self, dx=0, dy=0):
-        self.velocity_x += dx
-        # KEEP WORKING ON THIS
+    def movePlayer(self, acceleration_x):
+        self.velocity_x += acceleration_x
+        self.velocity_x = max(-10, min(self.velocity_x, 10))  # Limit horizontal speed
+        x, y = self.position
+        x += self.velocity_x
+
+        # Check for screen boundaries
+        if 
+
+        """
+        if acceleration_x == 0:
+            self.velocity_x = 0  # Stop horizontal movement if no input
+        """
+        
+        
+        
 
     def updateGravity(self):
         # Apply gravity
