@@ -25,8 +25,12 @@ clock = py.time.Clock()
 
 startingPosition = (400, 600)
 
+crouchHeight = 25
+standHeight = 50
+
+
 class Player:
-    def __init__(self, name, width=50, height=50):
+    def __init__(self, name, width=40, height=50):
         self.name = name
         self.position = startingPosition
         self.width = width
@@ -34,6 +38,8 @@ class Player:
 
         self.velocity_y = 0
         self.velocity_x = 0
+
+        self.crouchToggled = False
 
         print(f"Player {self.name} created at position {self.position}")
 
@@ -57,9 +63,12 @@ class Player:
                 self.velocity_x -= DECELERATION
             elif self.velocity_x < 0:
                 self.velocity_x += DECELERATION
-        
-        
-        
+    
+    def crouch(self):
+        self.height = crouchHeight
+    def stand(self):
+        self.height = standHeight
+
 
     def updateGravity(self):
         # Apply gravity
@@ -79,6 +88,7 @@ class Player:
         selfRect = self.getRect()
         platformRect = platform.getRect()
         py.rect.colliderect()
+        
 
     def getRect(self):
         x, y = self.position
@@ -91,26 +101,41 @@ class Player:
 mainCharacter = Player("Player1")
 mainCharacter.draw()
 
-ground = py.Rect(0, GROUND_HEIGHT+25, WIDTH, 50)
 rooms = {
     "Beginning": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 }
 
 platforms = [
-    py.Rect(0, GROUND_HEIGHT+25, WIDTH, 50)
+    # Tuple of (x, y, width, height)
+    (0, GROUND_HEIGHT+25, WIDTH, 50),
+    (100, GROUND_HEIGHT-50, 200, 50),
+    (400, GROUND_HEIGHT-100, 200, 50),
+    (700, GROUND_HEIGHT-150, 200, 50),
+    (900, GROUND_HEIGHT-200, 200, 50),
+    (300, GROUND_HEIGHT-250, 200, 50),
+    (600, GROUND_HEIGHT-300, 200, 50),
+    (800, GROUND_HEIGHT-350, 200, 50)
 ]
 
 
 
 class Room():
-    def __init__(self, layout):
+    def __init__(self, layout=None):
         self.layout = layout
         self.width = WIDTH
         self.height = HEIGHT
     
+    def draw(self):
+        for platform in platforms:
+            x, y, width, height = platform
+            py.Rect(x, y, width, height)
+            py.draw.rect(screen, (100, 100, 100), py.Rect(x, y, width, height))
+            
+    
     def updateLayout():
         pass
 
+room = Room()
 
 running = True
 while running:
@@ -120,7 +145,6 @@ while running:
     clock.tick(60) # Limit the frame rate to 60 FPS
 
     # Draw the environment/room -- TEMPORARY
-    
 
 
     # Respond to player input
@@ -128,6 +152,12 @@ while running:
         # Quit the game
         if event.type == py.QUIT:
             running = False
+        if event.type == py.KEYDOWN:
+            if event.key == py.K_s:
+                mainCharacter.crouch()
+        if event.type == py.KEYUP:
+            if event.key == py.K_s:
+                mainCharacter.stand()
     
     keys = py.key.get_pressed()
     if keys[py.K_a] or keys[py.K_d]:
@@ -138,10 +168,9 @@ while running:
     else:
         mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
 
-    for platform in platforms:
-        py.draw.rect(screen, (100, 100, 100), ground)
+    
 
-
+    room.draw()
 
     mainCharacter.updateGravity()
     mainCharacter.draw()
