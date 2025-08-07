@@ -1,4 +1,5 @@
 import pygame as py
+from RoomLayouts import rooms as roomLayouts
 
 py.init() # Initialize Pygame Modules
 
@@ -13,7 +14,7 @@ GROUND_HEIGHT = 725
 
 ACCELERATION = 1
 DECELERATION = 2
-max_speed = 8
+maxSpeed = 8
 
 nameOfGame = "Roguelike Shapeshifter TEST"
 
@@ -22,6 +23,8 @@ py.display.set_caption(nameOfGame)
 screen = py.display.get_surface()
 
 clock = py.time.Clock()
+
+currentRoom = "cell"
 
 startingPosition = (400, 600)
 
@@ -36,19 +39,19 @@ class Player:
         self.width = width
         self.height = height
 
-        self.velocity_y = 0
-        self.velocity_x = 0
+        self.yVelocity = 0
+        self.xVelocity = 0
 
         self.crouchToggled = False
 
         print(f"Player {self.name} created at position {self.position}")
 
-    def movePlayer(self, acceleration_x):
-        self.velocity_x += acceleration_x
-        self.velocity_x = max(-max_speed, min(self.velocity_x, max_speed))  # Limit horizontal speed by: max(absolute minimum, actual speed capped at maximum)-> restricted velocity
-        print(self.velocity_x, end=' ', flush=True)
+    def movePlayer(self, xAcceleration):
+        self.xVelocity += xAcceleration
+        self.xVelocity = max(-maxSpeed, min(self.xVelocity, maxSpeed))  # Limit horizontal speed by: max(absolute minimum, actual speed capped at maximum)-> restricted velocity
+        #print(self.xVelocity, end=' ', flush=True)
         x, y = self.position
-        future_x = x + self.velocity_x
+        future_x = x + self.xVelocity
 
         # Check for screen boundaries
         if future_x < (0 + self.width / 2):
@@ -58,37 +61,39 @@ class Player:
         
         self.position = (future_x, y)
 
-        if acceleration_x == 0:
-            if self.velocity_x > 0:
-                self.velocity_x -= DECELERATION
-            elif self.velocity_x < 0:
-                self.velocity_x += DECELERATION
+        if xAcceleration == 0:
+            if self.xVelocity > 0:
+                self.xVelocity -= DECELERATION
+            elif self.xVelocity < 0:
+                self.xVelocity += DECELERATION
     
     def crouch(self):
         self.height = crouchHeight
     def stand(self):
         self.height = standHeight
+    def jump(self):
+        platformsList = [Platform(*p) for p in platforms]
+        selfRect = self.getRect()
+        for platform in platformsList:
+            selfRect = platform.getRect()
+            if selfRect.colliderect(selfRect):
+                self.yVelocity = -10
+                print(self.yVelocity)
+
 
 
     def updateGravity(self):
         # Apply gravity
-        self.velocity_y += GRAVITY
+        self.yVelocity += GRAVITY
         x, y = self.position
-        y += self.velocity_y
+        y += self.yVelocity
 
         # Check for ground collision
         if y >= GROUND_HEIGHT:
             y = GROUND_HEIGHT
-            self.velocity_y = 0  # Reset vertical velocity on ground contact
+            self.yVelocity = 0  # Reset vertical velocity on ground contact
         
         self.position = (x, y)
-
-    
-    def checkCollision(self, platform):
-        selfRect = self.getRect()
-        platformRect = platform.getRect()
-        py.rect.colliderect()
-        
 
     def getRect(self):
         x, y = self.position
@@ -101,9 +106,8 @@ class Player:
 mainCharacter = Player("Player1")
 mainCharacter.draw()
 
-rooms = {
-    "Beginning": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-}
+
+
 
 platforms = [
     # Tuple of (x, y, width, height)
@@ -117,23 +121,89 @@ platforms = [
     (800, GROUND_HEIGHT-350, 200, 50)
 ]
 
-
-
-class Room():
-    def __init__(self, layout=None):
-        self.layout = layout
-        self.width = WIDTH
-        self.height = HEIGHT
+class Platform():
+    def __init__(self, x, y, width=50, height=50):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+    
+    def getRect(self):
+        return py.Rect(self.x, self.y, self.width, self.height)
     
     def draw(self):
-        for platform in platforms:
-            x, y, width, height = platform
-            py.Rect(x, y, width, height)
-            py.draw.rect(screen, (100, 100, 100), py.Rect(x, y, width, height))
+        py.draw.rect(screen, (100, 100, 100), self.getRect())
+
+
+themeColourPalettes = {
+    "Dungeon": (100, 120, 140)
+}
+
+class Room():
+    def __init__(self, currentRoom="Cell", theme="Dungeon"):
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.currentRoom = currentRoom
+        self.theme = theme
+        self.rows = 16
+        self.columns = 22
+        self.platforms = []
+        
+    
+    def draw(self):
+        flatLayout = roomLayouts[self.currentRoom]
+        layout = [flatLayout[i*self.columns:(i+1)*self.columns] for i in range(self.rows)] # Converts one long list into a list of lists
+
+        for y in range(0, self.rows):
+            for x in range(0, self.columns):
+                if layout[y][x] == 1:
+                    xPos, yPos, rectWidth, rectHeight = (x*50, y*50, WIDTH//self.columns, HEIGHT//self.rows)
+                    py.draw.rect(screen, (themeColourPalettes[self.theme]), (xPos, yPos, rectWidth, rectHeight))
+                    platformObj = Platform(xPos, yPos, rectWidth, rectHeight)
+                    platformObj.draw()
+                    self.platforms.append(platformObj)
+
+            
+            
             
     
     def updateLayout():
         pass
+
+
+class CollisionManager:
+    def __init__(self, player, platforms):
+        self.player = player
+        self.platforms = [Platform(*p) for p in platforms]
+
+    def handle_collisions(self):
+        player_rect = self.player.getRect()
+        for platform in self.platforms:
+            plat_rect = platform.getRect()
+            if player_rect.colliderect(plat_rect):
+                self.resolve_collision(platform)
+
+    def resolve_collision(self, platform):
+        # Y axis colision logic
+        if self.player.yVelocity > 0:
+            # Top collision
+            self.player.position = (self.player.position[0], platform.y - self.player.height / 2)
+            self.player.yVelocity = 0
+        elif self.player.yVelocity < 0:
+            # Bottom collision
+            self.player.position = (self.player.position[0], platform.y + platform.height + self.player.height / 2)
+            self.player.yVelocity = 0
+        # X axis collision logic
+        if self.player.xVelocity > 0:
+            # Left collision
+            self.player.position = (platform.x - self.player.width / 2, self.player.position[1]) # Continue editing
+            self.player.xVelocity = 0
+
+
+        # Horizontal collision (optional, for walls)
+        # You can add similar logic for left/right collisions if needed
+
+collision_manager = CollisionManager(mainCharacter, platforms)
 
 room = Room()
 
@@ -144,9 +214,6 @@ while running:
     screen.fill((0, 0, 0))  # Clear the screen
     clock.tick(60) # Limit the frame rate to 60 FPS
 
-    # Draw the environment/room -- TEMPORARY
-
-
     # Respond to player input
     for event in py.event.get():
         # Quit the game
@@ -155,6 +222,8 @@ while running:
         if event.type == py.KEYDOWN:
             if event.key == py.K_s:
                 mainCharacter.crouch()
+            if event.key == py.K_w:
+                mainCharacter.jump()
         if event.type == py.KEYUP:
             if event.key == py.K_s:
                 mainCharacter.stand()
@@ -167,12 +236,11 @@ while running:
             mainCharacter.movePlayer(ACCELERATION)
     else:
         mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
-
-    
-
+        
     room.draw()
 
     mainCharacter.updateGravity()
+    collision_manager.handle_collisions()
     mainCharacter.draw()
 
     
