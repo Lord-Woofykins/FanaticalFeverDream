@@ -170,11 +170,11 @@ class Room():
     def updateLayout():
         pass
 
-
+room = Room()
 class CollisionManager:
-    def __init__(self, player, platforms):
+    def __init__(self, player):
         self.player = player
-        self.platforms = [Platform(*p) for p in platforms]
+        self.platforms = room.platforms
 
     def handle_collisions(self):
         player_rect = self.player.getRect()
@@ -196,16 +196,18 @@ class CollisionManager:
         # X axis collision logic
         if self.player.xVelocity > 0:
             # Left collision
-            self.player.position = (platform.x - self.player.width / 2, self.player.position[1]) # Continue editing
+            self.player.position = (platform.x - self.player.width / 2, self.player.position[1])
+            self.player.xVelocity = 0
+        elif self.player.xVelocity < 0:
+            # Left collision
+            self.player.position = (platform.x + platform.width + self.player.width / 2, self.player.position[1])
             self.player.xVelocity = 0
 
 
         # Horizontal collision (optional, for walls)
         # You can add similar logic for left/right collisions if needed
 
-collision_manager = CollisionManager(mainCharacter, platforms)
-
-room = Room()
+collision_manager = CollisionManager(mainCharacter)
 
 running = True
 while running:
