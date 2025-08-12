@@ -72,9 +72,8 @@ class Player:
     def stand(self):
         self.height = standHeight
     def jump(self):
-        platformsList = [Platform(*p) for p in platforms]
         selfRect = self.getRect()
-        for platform in platformsList:
+        for platform in room.platforms:
             selfRect = platform.getRect()
             if selfRect.colliderect(selfRect):
                 self.yVelocity = -10
@@ -106,20 +105,6 @@ class Player:
 mainCharacter = Player("Player1")
 mainCharacter.draw()
 
-
-
-
-platforms = [
-    # Tuple of (x, y, width, height)
-    (0, GROUND_HEIGHT+25, WIDTH, 50),
-    (100, GROUND_HEIGHT-50, 200, 50),
-    (400, GROUND_HEIGHT-100, 200, 50),
-    (700, GROUND_HEIGHT-150, 200, 50),
-    (900, GROUND_HEIGHT-200, 200, 50),
-    (300, GROUND_HEIGHT-250, 200, 50),
-    (600, GROUND_HEIGHT-300, 200, 50),
-    (800, GROUND_HEIGHT-350, 200, 50)
-]
 
 class Platform():
     def __init__(self, x, y, width=50, height=50):
@@ -163,51 +148,53 @@ class Room():
                     platformObj.draw()
                     self.platforms.append(platformObj)
 
-            
-            
-            
     
     def updateLayout():
         pass
 
 room = Room()
 class CollisionManager:
-    def __init__(self, player):
-        self.player = player
+    def __init__(self):
         self.platforms = room.platforms
 
-    def handle_collisions(self):
-        player_rect = self.player.getRect()
+    def handle_collisions(self, player):
+        # Vertical collision
+        yOriginal, xOriginal = player.position
+        player.position = (player.position[0], player.position[1] + player.yVelocity)
+        player_rect = player.getRect()
+        for platform in self.platforms:
+            plat_rect = platform.getRect()
+
+            if player_rect.colliderect(plat_rect):
+                if player.yVelocity > 0:
+                    # Landing on top
+                    player.position = (player.position[0], platform.y - player.height / 2)
+                    print("triggered top")
+                    print(platform.y)
+
+                elif player.yVelocity < 0:
+                    # Hitting head
+                    player.position = (player.position[0], platform.y + platform.height + player.height / 2)
+                player.yVelocity = 0
+                player_rect = player.getRect()  # Update rect after position change
+
+        # Horizontal collision
+        player.position = (player.position[0] + player.xVelocity, player.position[1])
+        player_rect = player.getRect()
         for platform in self.platforms:
             plat_rect = platform.getRect()
             if player_rect.colliderect(plat_rect):
-                self.resolve_collision(platform)
-
-    def resolve_collision(self, platform):
-        # Y axis colision logic
-        if self.player.yVelocity > 0:
-            # Top collision
-            self.player.position = (self.player.position[0], platform.y - self.player.height / 2)
-            self.player.yVelocity = 0
-        elif self.player.yVelocity < 0:
-            # Bottom collision
-            self.player.position = (self.player.position[0], platform.y + platform.height + self.player.height / 2)
-            self.player.yVelocity = 0
-        # X axis collision logic
-        if self.player.xVelocity > 0:
-            # Left collision
-            self.player.position = (platform.x - self.player.width / 2, self.player.position[1])
-            self.player.xVelocity = 0
-        elif self.player.xVelocity < 0:
-            # Left collision
-            self.player.position = (platform.x + platform.width + self.player.width / 2, self.player.position[1])
-            self.player.xVelocity = 0
-
-
-        # Horizontal collision (optional, for walls)
-        # You can add similar logic for left/right collisions if needed
-
-collision_manager = CollisionManager(mainCharacter)
+                if player.xVelocity > 0:
+                    # Hitting wall on right
+                    player.position = (platform.x - player.width / 2, player.position[1])
+                    print("triggered right")
+                elif player.xVelocity < 0:
+                    # Hitting wall on left
+                    player.position = (platform.x + platform.width + player.width / 2, player.position[1])
+                    print("triggered left")
+                player.xVelocity = 0
+                player_rect = player.getRect()  # Update rect after position change
+collision_manager = CollisionManager()
 
 running = True
 while running:
@@ -222,6 +209,8 @@ while running:
         if event.type == py.QUIT:
             running = False
         if event.type == py.KEYDOWN:
+            if event.key == py.K_ESCAPE:
+                running = False
             if event.key == py.K_s:
                 mainCharacter.crouch()
             if event.key == py.K_w:
@@ -242,7 +231,7 @@ while running:
     room.draw()
 
     mainCharacter.updateGravity()
-    collision_manager.handle_collisions()
+    collision_manager.handle_collisions(mainCharacter)
     mainCharacter.draw()
 
     
