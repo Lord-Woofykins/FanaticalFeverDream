@@ -10,7 +10,6 @@ GREEN = (0, 128, 0)
 WIDTH, HEIGHT = 1100, 800
 
 GRAVITY = 0.5
-GROUND_HEIGHT = 725
 
 ACCELERATION = 1
 DECELERATION = 2
@@ -74,8 +73,8 @@ class Player:
     def jump(self):
         selfRect = self.getRect()
         for platform in room.platforms:
-            selfRect = platform.getRect()
-            if selfRect.colliderect(selfRect):
+            platRect = platform.getRect()
+            if selfRect.colliderect(platRect):
                 self.yVelocity = -10
                 print(self.yVelocity)
 
@@ -84,15 +83,6 @@ class Player:
     def updateGravity(self):
         # Apply gravity
         self.yVelocity += GRAVITY
-        x, y = self.position
-        y += self.yVelocity
-
-        # Check for ground collision
-        if y >= GROUND_HEIGHT:
-            y = GROUND_HEIGHT
-            self.yVelocity = 0  # Reset vertical velocity on ground contact
-        
-        self.position = (x, y)
 
     def getRect(self):
         x, y = self.position
@@ -159,7 +149,6 @@ class CollisionManager:
 
     def handle_collisions(self, player):
         # Vertical collision
-        yOriginal, xOriginal = player.position
         player.position = (player.position[0], player.position[1] + player.yVelocity)
         player_rect = player.getRect()
         for platform in self.platforms:
@@ -230,9 +219,16 @@ while running:
         
     room.draw()
 
-    mainCharacter.updateGravity()
-    collision_manager.handle_collisions(mainCharacter)
-    mainCharacter.draw()
+    # Player updates per frame
+
+    # Movement updates
+    mainCharacter.updateGravity() # Apply gravity
+    collision_manager.handle_collisions(mainCharacter) # Resolve collisions
+
+    # Other updates
+
+
+    mainCharacter.draw() # Draw/show changes
 
     
     py.display.update()
