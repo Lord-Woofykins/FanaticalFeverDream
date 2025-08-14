@@ -81,7 +81,7 @@ mainCharacter = Player("Player1")
 mainCharacter.draw()
 
 
-class Platform():
+class Platform:
     def __init__(self, x, y, width=50, height=50):
         self.x = x
         self.y = y
@@ -92,11 +92,19 @@ class Platform():
         return py.Rect(self.x, self.y, self.width, self.height)
     
     def draw(self):
-        py.draw.rect(screen, (100, 100, 100), self.getRect())
-
+        platformColour = themeColourPalettes[room.theme]["platform"]
+        py.draw.rect(screen, (platformColour), self.getRect())
 
 themeColourPalettes = {
-    "Dungeon": (100, 120, 140)
+    "Forest": {
+        "background": (34, 139, 34),
+        "platform": (139, 69, 19),
+    },
+    "Dungeon": {
+        "background": (100, 120, 140),
+        "platform": (139, 69, 19),
+    }, 
+
 }
 
 class Room():
