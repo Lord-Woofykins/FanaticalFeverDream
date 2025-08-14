@@ -23,14 +23,10 @@ screen = py.display.get_surface()
 
 clock = py.time.Clock()
 
-currentRoom = "cell"
-
-startingPosition = (400, 600)
+startingPosition = [400, 600]
 
 crouchHeight = 25
 standHeight = 50
-
-
 class Player:
     def __init__(self, name, width=40, height=50):
         self.name = name
@@ -47,24 +43,13 @@ class Player:
 
     def movePlayer(self, xAcceleration):
         self.xVelocity += xAcceleration
-        self.xVelocity = max(-maxSpeed, min(self.xVelocity, maxSpeed))  # Limit horizontal speed by: max(absolute minimum, actual speed capped at maximum)-> restricted velocity
-        #print(self.xVelocity, end=' ', flush=True)
-        x, y = self.position
-        future_x = x + self.xVelocity
-
-        # Check for screen boundaries
-        if future_x < (0 + self.width / 2):
-            future_x = (0 + self.width / 2)
-        elif future_x > (WIDTH - (self.width / 2)):
-            future_x = (WIDTH - (self.width / 2))
-        
-        self.position = (future_x, y)
+        self.xVelocity = max(-maxSpeed, min(self.xVelocity, maxSpeed)) # Limit horizontal speed by: max(absolute minimum, actual speed capped at maximum)-> restricted velocity
 
         if xAcceleration == 0:
             if self.xVelocity > 0:
-                self.xVelocity -= DECELERATION
+                self.xVelocity = max(0, self.xVelocity - DECELERATION)
             elif self.xVelocity < 0:
-                self.xVelocity += DECELERATION
+                self.xVelocity = min(0, self.xVelocity + DECELERATION)
     
     def crouch(self):
         self.height = crouchHeight
