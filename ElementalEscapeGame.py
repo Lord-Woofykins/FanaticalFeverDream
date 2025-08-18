@@ -27,21 +27,20 @@ clock = py.time.Clock()
 
 startingPosition = [400, 600]
 
-crouchHeight = 25
-standHeight = 50
 class Player:
     def __init__(self, width=40, height=50):
         self.position = startingPosition
         self.width = width
         self.height = height
 
+        self.standHeight = 50
+        self.crouchHeight = min(50, height/2) # Dynamic height adjustment for changing later
+
         self.yVelocity = 0
         self.xVelocity = 0
 
         self.crouchToggled = False
         self.onGround = False
-
-        print(f"Player {self.name} created at position {self.position}")
 
     def movePlayer(self, xAcceleration):
         self.xVelocity += xAcceleration
@@ -54,17 +53,15 @@ class Player:
                 self.xVelocity = min(0, self.xVelocity + DECELERATION)
     
     def crouch(self):
-        oldHeight = self.height
-        self.height = crouchHeight
+        self.height = self.crouchHeight
         # Adjust position to keep player on ground when crouching
         print(self.position[1])
-        self.position[1] += (oldHeight - self.height) / 2
+        self.position[1] += self.height / 2
         
     def stand(self):
-        old_height = self.height
-        self.height = standHeight
+        self.height = self.standHeight
         # Adjust position to keep player on ground when standing
-        self.position[1] -= (self.height - old_height) / 2
+        self.position[1] -= (self.height - self.crouchHeight) / 2
         
     def jump(self):
         if self.onGround:  # Only jump if on ground
