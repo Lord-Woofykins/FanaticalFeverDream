@@ -94,8 +94,8 @@ themeColourPalettes = {
         "platform": (139, 69, 19),
     },
     "Dungeon": {
-        "background": (100, 120, 140),
-        "platform": (139, 69, 19),
+        "background": (100, 110, 120),
+        "platform": (100, 120, 140),
     }, 
 
 }
