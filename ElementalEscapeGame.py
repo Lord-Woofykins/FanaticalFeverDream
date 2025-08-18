@@ -21,6 +21,8 @@ py.display.set_mode((WIDTH, HEIGHT))
 py.display.set_caption(nameOfGame)
 screen = py.display.get_surface()
 
+py.mouse.set_visible(False)
+
 clock = py.time.Clock()
 
 startingPosition = [400, 600]
@@ -28,8 +30,7 @@ startingPosition = [400, 600]
 crouchHeight = 25
 standHeight = 50
 class Player:
-    def __init__(self, name, width=40, height=50):
-        self.name = name
+    def __init__(self, width=40, height=50):
         self.position = startingPosition
         self.width = width
         self.height = height
@@ -38,6 +39,7 @@ class Player:
         self.xVelocity = 0
 
         self.crouchToggled = False
+        self.onGround = False
 
         print(f"Player {self.name} created at position {self.position}")
 
@@ -52,34 +54,31 @@ class Player:
                 self.xVelocity = min(0, self.xVelocity + DECELERATION)
     
     def crouch(self):
+        oldHeight = self.height
         self.height = crouchHeight
+        # Adjust position to keep player on ground when crouching
+        print(self.position[1])
+        self.position[1] += (oldHeight - self.height) / 2
+        
     def stand(self):
+        old_height = self.height
         self.height = standHeight
+        # Adjust position to keep player on ground when standing
+        self.position[1] -= (self.height - old_height) / 2
+        
     def jump(self):
-        selfRect = self.getRect()
-        for platform in room.platforms:
-            platRect = platform.getRect()
-            if selfRect.colliderect(platRect):
-                self.yVelocity = -10
-                print(self.yVelocity)
-
-
+        if self.onGround:  # Only jump if on ground
+            self.yVelocity = -12
 
     def updateGravity(self):
-        # Apply gravity
         self.yVelocity += GRAVITY
 
     def getRect(self):
-        x, y = self.position
-        return py.Rect(x - (self.width / 2), y - (self.height / 2), self.width, self.height)
+        return py.Rect(self.position[0] - (self.width / 2), self.position[1] - (self.height / 2), 
+        self.width, self.height)
 
     def draw(self):
-        x, y = self.position
-        py.draw.rect(screen, GREEN, ((x - (self.width/2)), (y - (self.height/2)), self.width, self.height))
-    
-mainCharacter = Player("Player1")
-mainCharacter.draw()
-
+        py.draw.rect(screen, GREEN, (self.position[0] - (self.width/2), self.position[1] - (self.height/2), self.width, self.height))
 
 class Platform:
     def __init__(self, x, y, width=50, height=50):
@@ -107,8 +106,8 @@ themeColourPalettes = {
 
 }
 
-class Room():
-    def __init__(self, currentRoom="Cell", theme="Dungeon"):
+class Room:
+    def __init__(self, currentRoom="cell", theme="Dungeon"):
         self.width = WIDTH
         self.height = HEIGHT
         self.currentRoom = currentRoom
@@ -141,45 +140,51 @@ class Room():
             platform.draw()
 
 class CollisionManager:
-    def __init__(self):
-        pass
+    def handle_collisions(self, player, room):
+        # Apply vertical movement first
+        player.position[1] += player.yVelocity
+        playerRect = player.getRect()
+        
+        # Check for vertical collisions
+        for platform in room.platforms:
+            platRect = platform.getRect()
+            if playerRect.colliderect(platRect):
+                if player.yVelocity > 0:  # Falling down - landed on platform
+                    player.position[1] = platform.y - player.height / 2
+                    player.yVelocity = 0
+                elif player.yVelocity < 0:  # Moving up - hit ceiling
+                    player.position[1] = platform.y + platform.height + player.height / 2
+                    player.yVelocity = 0
+                break
 
-    def handle_collisions(self, player):
-        # Vertical collision
-        player.position = (player.position[0], player.position[1] + player.yVelocity)
-        player_rect = player.getRect()
-        for platform in self.platforms:
-            plat_rect = platform.getRect()
-
-            if player_rect.colliderect(plat_rect):
-                if player.yVelocity > 0:
-                    # Landing on top
-                    player.position = (player.position[0], platform.y - player.height / 2)
-                    print("triggered top")
-                    print(platform.y)
-
-                elif player.yVelocity < 0:
-                    # Hitting head
-                    player.position = (player.position[0], platform.y + platform.height + player.height / 2)
-                player.yVelocity = 0
-                player_rect = player.getRect()  # Update rect after position change
-
-        # Horizontal collision
-        player.position = (player.position[0] + player.xVelocity, player.position[1])
-        player_rect = player.getRect()
-        for platform in self.platforms:
-            plat_rect = platform.getRect()
-            if player_rect.colliderect(plat_rect):
-                if player.xVelocity > 0:
-                    # Hitting wall on right
-                    player.position = (platform.x - player.width / 2, player.position[1])
-                    print("triggered right")
-                elif player.xVelocity < 0:
-                    # Hitting wall on left
-                    player.position = (platform.x + platform.width + player.width / 2, player.position[1])
-                    print("triggered left")
+        # Apply horizontal movement
+        player.position[0] += player.xVelocity
+        playerRect = player.getRect()
+        
+        # Check horizontal collisions
+        for platform in room.platforms:
+            platRect = platform.getRect()
+            if playerRect.colliderect(platRect):
+                if player.xVelocity > 0:  # Moving right
+                    player.position[0] = platform.x - player.width / 2
+                elif player.xVelocity < 0:  # Moving left
+                    player.position[0] = platform.x + platform.width + player.width / 2
                 player.xVelocity = 0
-                player_rect = player.getRect()  # Update rect after position change
+                break
+
+        # Check if player is on ground (separate check after movement)
+        player.onGround = False
+        groundCheckRect = py.Rect(player.position[0] - player.width/2, player.position[1] + player.height/2, player.width, 2)  # Small rect below player
+        
+        for platform in room.platforms:
+            if groundCheckRect.colliderect(platform.getRect()):
+                player.onGround = True
+                break
+
+# Create game objects
+mainCharacter = Player()
+room = Room()
+room.loadRoom()
 collision_manager = CollisionManager()
 
 # Main game loop
@@ -210,7 +215,7 @@ while running:
         mainCharacter.movePlayer(ACCELERATION)
     else:
         mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
-        
+
     # Update physics
     mainCharacter.updateGravity()
     collision_manager.handle_collisions(mainCharacter, room)
