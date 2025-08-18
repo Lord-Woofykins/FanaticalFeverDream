@@ -54,14 +54,11 @@ class Player:
     
     def crouch(self):
         self.height = self.crouchHeight
-        # Adjust position to keep player on ground when crouching
-        print(self.position[1])
-        self.position[1] += self.height / 2
+        self.position[1] += self.height / 2 # Adjusting position to stay grounded
         
     def stand(self):
         self.height = self.standHeight
-        # Adjust position to keep player on ground when standing
-        self.position[1] -= (self.height - self.crouchHeight) / 2
+        self.position[1] -= self.crouchHeight / 2 # Adjusting position to normal height
         
     def jump(self):
         if self.onGround:  # Only jump if on ground
