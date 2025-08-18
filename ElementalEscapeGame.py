@@ -117,28 +117,32 @@ class Room():
         self.columns = 22
         self.platforms = []
         
-    
-    def draw(self):
+    def loadRoom(self):
+        """Load the room layout and create platforms"""
+        self.platforms = []  # Clear existing platforms
+        
         flatLayout = roomLayouts[self.currentRoom]
-        layout = [flatLayout[i*self.columns:(i+1)*self.columns] for i in range(self.rows)] # Converts one long list into a list of lists
+        layout = [flatLayout[i*self.columns:(i+1)*self.columns] for i in range(0, self.rows)] # Converts one long list into a list of lists
 
         for y in range(0, self.rows):
             for x in range(0, self.columns):
                 if layout[y][x] == 1:
-                    xPos, yPos, rectWidth, rectHeight = (x*50, y*50, WIDTH//self.columns, HEIGHT//self.rows)
-                    py.draw.rect(screen, (themeColourPalettes[self.theme]), (xPos, yPos, rectWidth, rectHeight))
+                    xPos, yPos = x * 50, y * 50
+                    rectWidth, rectHeight = 50, 50
                     platformObj = Platform(xPos, yPos, rectWidth, rectHeight)
-                    platformObj.draw()
                     self.platforms.append(platformObj)
-
     
-    def updateLayout():
-        pass
+    def draw(self):
+        # Draw background
+        screen.fill((50, 50, 50))
+        
+        # Draw platforms
+        for platform in self.platforms:
+            platform.draw()
 
-room = Room()
 class CollisionManager:
     def __init__(self):
-        self.platforms = room.platforms
+        pass
 
     def handle_collisions(self, player):
         # Vertical collision
@@ -178,21 +182,18 @@ class CollisionManager:
                 player_rect = player.getRect()  # Update rect after position change
 collision_manager = CollisionManager()
 
+# Main game loop
 running = True
 while running:
-
-    # Prepare the screen for next frame
-    screen.fill((0, 0, 0))  # Clear the screen
-    clock.tick(60) # Limit the frame rate to 60 FPS
-
-    # Respond to player input
+    # Handle events
     for event in py.event.get():
-        # Quit the game
+        # Quit game
         if event.type == py.QUIT:
             running = False
         if event.type == py.KEYDOWN:
             if event.key == py.K_ESCAPE:
                 running = False
+        # Movement events
             if event.key == py.K_s:
                 mainCharacter.crouch()
             if event.key == py.K_w:
@@ -201,30 +202,25 @@ while running:
             if event.key == py.K_s:
                 mainCharacter.stand()
     
+    # Handle continuous input
     keys = py.key.get_pressed()
-    if keys[py.K_a] or keys[py.K_d]:
-        if keys[py.K_a]:
-            mainCharacter.movePlayer(-ACCELERATION)  # Move left
-        if keys[py.K_d]:
-            mainCharacter.movePlayer(ACCELERATION)
+    if keys[py.K_a]:
+        mainCharacter.movePlayer(-ACCELERATION)
+    elif keys[py.K_d]:
+        mainCharacter.movePlayer(ACCELERATION)
     else:
         mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
         
-    room.draw()
-
-    # Player updates per frame
-
-    # Movement updates
-    mainCharacter.updateGravity() # Apply gravity
-    collision_manager.handle_collisions(mainCharacter) # Resolve collisions
-
-    # Other updates
-
-
-    mainCharacter.draw() # Draw/show changes
-
+    # Update physics
+    mainCharacter.updateGravity()
+    collision_manager.handle_collisions(mainCharacter, room)
     
-    py.display.update()
-
+    # Draw game for player
+    room.draw()
+    mainCharacter.draw()
+    
+    # Update the display
+    py.display.flip()
+    clock.tick(60)
 
 py.quit()
