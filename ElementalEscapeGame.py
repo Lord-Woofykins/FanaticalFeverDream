@@ -78,12 +78,12 @@ class Player:
         py.draw.rect(screen, GREEN, screenRect)
 
 class Camera:
-    def __init__(self, zoom=2.0):
+    def __init__(self, zoom=1.4):
         self.x = 0
         self.y = 0
         self.xTarget = 0
         self.yTarget = 0
-        self.smoothing = 0.1  # Lower = smoother, higher = more responsive
+        self.smoothing = 0.6  # Lower = smoother, higher = more responsive
         self.zoom = zoom
         
         # Calculate effective screen size
