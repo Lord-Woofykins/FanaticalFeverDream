@@ -39,7 +39,6 @@ class Player:
         self.yVelocity = 0
         self.xVelocity = 0
 
-        self.crouchToggled = False
         self.onGround = False
 
     def movePlayer(self, xAcceleration):
@@ -57,13 +56,8 @@ class Player:
         self.position[1] += self.height / 2 # Adjusting position to stay grounded
         
     def stand(self):
-        if self.crouchToggled:
-            # Store the bottom position before standing
-            yBottom = self.position[1] + (self.height / 2)
-            self.height = self.standHeight
-            # Set position so the bottom stays in the same place
-            self.position[1] = yBottom - (self.height / 2)
-            self.crouchToggled = False
+        self.height = self.standHeight
+        self.position[1] -= self.crouchHeight / 2 # Adjusting position to normal height
         
     def jump(self):
         if self.onGround:  # Only jump if on ground
