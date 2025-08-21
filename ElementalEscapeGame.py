@@ -28,12 +28,12 @@ clock = py.time.Clock()
 startingPosition = [400, 600]
 
 class Player:
-    def __init__(self, width=40, height=50):
+    def __init__(self, width=40, height=80):
         self.position = startingPosition.copy()
         self.width = width
         self.height = height
 
-        self.standHeight = 50
+        self.standHeight = height
         self.crouchHeight = min(50, height/2) # Dynamic height adjustment for changing later
 
         self.yVelocity = 0
