@@ -17,6 +17,14 @@ Blank Layout for room building:
 ]
 '''
 
+'''
+0-9 platform types
+10-19 items
+20-29 enemies
+30-39 door/passages
+40-49 special features
+'''
+
 
 rooms = {
     "cell": [

@@ -121,7 +121,7 @@ class Camera:
         return py.Rect(xScreen, yScreen, screenWidth, screenHeight)
 
 class Platform:
-    def __init__(self, x, y, width=50, height=50):
+    def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
         self.width = width
@@ -137,6 +137,13 @@ class Platform:
             screenRect.bottom > -screenRect.height and screenRect.top < HEIGHT + screenRect.height):
             platformColour = themeColourPalettes[room.theme]["platform"]
             py.draw.rect(screen, platformColour, screenRect)
+
+class Door(Platform):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+        self.isOpen = False
+        
+
 
 themeColourPalettes = {
     "Forest": {
@@ -168,11 +175,16 @@ class Room:
 
         for y in range(0, self.rows):
             for x in range(0, self.columns):
+                xPos, yPos = x * 50, y * 50
                 if layout[y][x] == 1:
-                    xPos, yPos = x * 50, y * 50
                     rectWidth, rectHeight = 50, 50
                     platformObj = Platform(xPos, yPos, rectWidth, rectHeight)
                     self.platforms.append(platformObj)
+                if layout[y][x] == 2:
+                    rectWidth, rectHeight = 50, 50
+                    doorObj = Door(xPos, yPos, rectWidth, rectHeight)
+                    self.platforms.append(doorObj)
+
     
     def draw(self, camera):
         # Draw background
@@ -246,20 +258,35 @@ while running:
         # Movement events
             if event.key == py.K_s:
                 mainCharacter.crouch()
+            if event.key == py.K_DOWN:
+                mainCharacter.crouch()
             if event.key == py.K_w:
+                mainCharacter.jump()
+            if event.key == py.K_UP:
                 mainCharacter.jump()
         if event.type == py.KEYUP:
             if event.key == py.K_s:
                 mainCharacter.stand()
+            if event.key == py.K_DOWN:
+                mainCharacter.stand()
     
     # Handle continuous input
     keys = py.key.get_pressed()
-    if keys[py.K_a]:
-        mainCharacter.movePlayer(-ACCELERATION)
-    elif keys[py.K_d]:
-        mainCharacter.movePlayer(ACCELERATION)
-    else:
-        mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
+    if keys[py.K_a] or keys[py.k_d]:
+        if keys[py.K_a]:
+            mainCharacter.movePlayer(-ACCELERATION)
+        elif keys[py.K_d]:
+            mainCharacter.movePlayer(ACCELERATION)
+        else:
+            mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
+    elif keys[py.K_LEFT] or keys[py.k_RIGHT]:
+        if keys[py.K_LEFT]:
+            mainCharacter.movePlayer(-ACCELERATION)
+        elif keys[py.K_RIGHT]:
+            mainCharacter.movePlayer(ACCELERATION)
+        else:
+            mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
+
 
     # Update physics
     mainCharacter.updateGravity()
