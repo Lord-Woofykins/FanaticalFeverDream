@@ -28,18 +28,17 @@ clock = py.time.Clock()
 startingPosition = [400, 600]
 
 class Player:
-    def __init__(self, width=40, height=50):
-        self.position = startingPosition
+    def __init__(self, width=40, height=80):
+        self.position = startingPosition.copy()
         self.width = width
         self.height = height
 
-        self.standHeight = 50
+        self.standHeight = height
         self.crouchHeight = min(50, height/2) # Dynamic height adjustment for changing later
 
         self.yVelocity = 0
         self.xVelocity = 0
 
-        self.crouchToggled = False
         self.onGround = False
 
     def movePlayer(self, xAcceleration):
@@ -54,14 +53,11 @@ class Player:
     
     def crouch(self):
         self.height = self.crouchHeight
-        # Adjust position to keep player on ground when crouching
-        print(self.position[1])
-        self.position[1] += self.height / 2
+        self.position[1] += self.height / 2 # Adjusting position to stay grounded
         
     def stand(self):
         self.height = self.standHeight
-        # Adjust position to keep player on ground when standing
-        self.position[1] -= (self.height - self.crouchHeight) / 2
+        self.position[1] -= self.crouchHeight / 2 # Adjusting position to normal height
         
     def jump(self):
         if self.onGround:  # Only jump if on ground
@@ -74,11 +70,58 @@ class Player:
         return py.Rect(self.position[0] - (self.width / 2), self.position[1] - (self.height / 2), 
         self.width, self.height)
 
-    def draw(self):
-        py.draw.rect(screen, GREEN, (self.position[0] - (self.width/2), self.position[1] - (self.height/2), self.width, self.height))
+    def draw(self, camera):
+        # Create a rect for the player in world coordinates
+        playerRect = py.Rect(self.position[0] - self.width/2, self.position[1] - self.height/2, self.width, self.height)
+        # Apply camera offset and zoom to the entire rectangle
+        screenRect = camera.applyRect(playerRect)
+        py.draw.rect(screen, GREEN, screenRect)
+
+class Camera:
+    def __init__(self, zoom=1.4):
+        self.x = 0
+        self.y = 0
+        self.xTarget = 0
+        self.yTarget = 0
+        self.smoothing = 0.6  # Lower = smoother, higher = more responsive
+        self.zoom = zoom
+        
+        # Calculate effective screen size
+        self.viewWidth = WIDTH / self.zoom
+        self.viewHeight = HEIGHT / self.zoom
+    
+    def follow(self, xTarget, yTarget):
+        # Calculate where the camera should be to center the target (accounting for zoom)
+        self.xTarget = xTarget - self.viewWidth // 2
+        self.yTarget = yTarget - self.viewHeight // 2
+        
+        # Smooth camera movement
+        self.x += (self.xTarget - self.x) * self.smoothing
+        self.y += (self.yTarget - self.y) * self.smoothing
+        
+        # Constrain camera to room bounds (accounting for zoom)
+        roomWidth = room.columns * 50
+        roomHeight = room.rows * 50
+        
+        self.x = max(0, min(self.x, roomWidth - self.viewWidth))
+        self.y = max(0, min(self.y, roomHeight - self.viewHeight))
+    
+    def apply(self, x, y):
+        """Convert world coordinates to screen coordinates with zoom"""
+        xScreen = (x - self.x) * self.zoom
+        yScreen = (y - self.y) * self.zoom
+        return int(xScreen), int(yScreen)
+    
+    def applyRect(self, rect):
+        """Apply camera offset and zoom to a rectangle"""
+        xScreen = (rect.x - self.x) * self.zoom
+        yScreen = (rect.y - self.y) * self.zoom
+        screenWidth = rect.width * self.zoom
+        screenHeight = rect.height * self.zoom
+        return py.Rect(xScreen, yScreen, screenWidth, screenHeight)
 
 class Platform:
-    def __init__(self, x, y, width=50, height=50):
+    def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
         self.width = width
@@ -87,9 +130,20 @@ class Platform:
     def getRect(self):
         return py.Rect(self.x, self.y, self.width, self.height)
     
-    def draw(self):
-        platformColour = themeColourPalettes[room.theme]["platform"]
-        py.draw.rect(screen, (platformColour), self.getRect())
+    def draw(self, camera):
+        # Only draw if platform is visible on screen (with zoom consideration)
+        screenRect = camera.applyRect(self.getRect())
+        if (screenRect.right > -screenRect.width and screenRect.left < WIDTH + screenRect.width and 
+            screenRect.bottom > -screenRect.height and screenRect.top < HEIGHT + screenRect.height):
+            platformColour = themeColourPalettes[room.theme]["platform"]
+            py.draw.rect(screen, platformColour, screenRect)
+
+class Door(Platform):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+        self.isOpen = False
+        
+
 
 themeColourPalettes = {
     "Forest": {
@@ -97,10 +151,9 @@ themeColourPalettes = {
         "platform": (139, 69, 19),
     },
     "Dungeon": {
-        "background": (100, 120, 140),
-        "platform": (139, 69, 19),
+        "background": (100, 110, 120),
+        "platform": (100, 120, 140),
     }, 
-
 }
 
 class Room:
@@ -122,19 +175,25 @@ class Room:
 
         for y in range(0, self.rows):
             for x in range(0, self.columns):
+                xPos, yPos = x * 50, y * 50
                 if layout[y][x] == 1:
-                    xPos, yPos = x * 50, y * 50
                     rectWidth, rectHeight = 50, 50
                     platformObj = Platform(xPos, yPos, rectWidth, rectHeight)
                     self.platforms.append(platformObj)
+                if layout[y][x] == 2:
+                    rectWidth, rectHeight = 50, 50
+                    doorObj = Door(xPos, yPos, rectWidth, rectHeight)
+                    self.platforms.append(doorObj)
+
     
-    def draw(self):
+    def draw(self, camera):
         # Draw background
-        screen.fill((50, 50, 50))
+        backgroundColour = themeColourPalettes[self.theme]["background"]
+        screen.fill(backgroundColour)
         
-        # Draw platforms
+        # Draw platforms with camera offset
         for platform in self.platforms:
-            platform.draw()
+            platform.draw(camera)
 
 class CollisionManager:
     def handle_collisions(self, player, room):
@@ -183,8 +242,9 @@ mainCharacter = Player()
 room = Room()
 room.loadRoom()
 collision_manager = CollisionManager()
+camera = Camera()
 
-# Main game loop
+"""Main game loop"""
 running = True
 while running:
     # Handle events
@@ -198,28 +258,46 @@ while running:
         # Movement events
             if event.key == py.K_s:
                 mainCharacter.crouch()
+            if event.key == py.K_DOWN:
+                mainCharacter.crouch()
             if event.key == py.K_w:
+                mainCharacter.jump()
+            if event.key == py.K_UP:
                 mainCharacter.jump()
         if event.type == py.KEYUP:
             if event.key == py.K_s:
                 mainCharacter.stand()
+            if event.key == py.K_DOWN:
+                mainCharacter.stand()
     
     # Handle continuous input
     keys = py.key.get_pressed()
-    if keys[py.K_a]:
-        mainCharacter.movePlayer(-ACCELERATION)
-    elif keys[py.K_d]:
-        mainCharacter.movePlayer(ACCELERATION)
-    else:
-        mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
+    if keys[py.K_a] or keys[py.k_d]:
+        if keys[py.K_a]:
+            mainCharacter.movePlayer(-ACCELERATION)
+        elif keys[py.K_d]:
+            mainCharacter.movePlayer(ACCELERATION)
+        else:
+            mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
+    elif keys[py.K_LEFT] or keys[py.k_RIGHT]:
+        if keys[py.K_LEFT]:
+            mainCharacter.movePlayer(-ACCELERATION)
+        elif keys[py.K_RIGHT]:
+            mainCharacter.movePlayer(ACCELERATION)
+        else:
+            mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
+
 
     # Update physics
     mainCharacter.updateGravity()
     collision_manager.handle_collisions(mainCharacter, room)
     
+    # Update camera to follow player
+    camera.follow(mainCharacter.position[0], mainCharacter.position[1])
+    
     # Draw game for player
-    room.draw()
-    mainCharacter.draw()
+    room.draw(camera)
+    mainCharacter.draw(camera)
     
     # Update the display
     py.display.flip()
