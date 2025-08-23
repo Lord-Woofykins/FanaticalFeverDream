@@ -148,6 +148,15 @@ class Door(Platform):
         self.isOpen = True
         self.platformType = "openDoor"
 
+class Key(Platform):
+    def __init__(self, x, y, width, height, platformType):
+        super().__init__(x, y, width, height, platformType)
+
+    def collect(self):
+
+
+        self.collected = False
+
 
 
 themeColourPalettes = {
@@ -161,6 +170,7 @@ themeColourPalettes = {
         "platform": (100, 120, 140),
         "closedDoor": (129,97,62),
         "openDoor": (129,97,62, 50),
+        "key": (203,161,53)
     }, 
 }
 
@@ -172,7 +182,10 @@ class Room:
         self.theme = theme
         self.rows = 16
         self.columns = 22
+
         self.platforms = []
+        self.collectibles = []
+        self.miscellaneous = []
         
     def loadRoom(self):
         """Load the room layout and create platforms"""
@@ -184,15 +197,19 @@ class Room:
         for y in range(0, self.rows):
             for x in range(0, self.columns):
                 xPos, yPos = x * 50, y * 50
+                rectWidth, rectHeight = 50, 50
                 if layout[y][x] == 1:
-                    rectWidth, rectHeight = 50, 50
                     platformObj = Platform(xPos, yPos, rectWidth, rectHeight, "platform")
                     self.platforms.append(platformObj)
                 if layout[y][x] == 2:
-                    rectWidth, rectHeight = 50, 50
                     doorObj = Door(xPos, yPos, rectWidth, rectHeight, "door")
                     self.platforms.append(doorObj)
                     doorObj.openDoor()
+                if layout[y][x] == 10:
+                    keyObj = Key(xPos, yPos, rectWidth, rectHeight, "key")
+                    self.collectibles.append(keyObj)
+                    self.miscellaneous.append(keyObj)
+                    
 
     
     def draw(self, camera):
@@ -203,6 +220,8 @@ class Room:
         # Draw platforms with camera offset
         for platform in self.platforms:
             platform.draw(camera)
+        for object in room.miscellaneous:
+            object.draw(camera)
 
 class CollisionManager:
     def handle_collisions(self, player, room):
@@ -231,7 +250,6 @@ class CollisionManager:
         # Check horizontal collisions
         for platform in room.platforms:
             if platform.platformType == "openDoor" and platform.isOpen:
-                print("triggered")
                 continue
             platRect = platform.getRect()
             if playerRect.colliderect(platRect):
