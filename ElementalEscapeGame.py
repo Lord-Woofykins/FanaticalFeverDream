@@ -15,7 +15,7 @@ ACCELERATION = 1
 DECELERATION = 2
 maxSpeed = 8
 
-nameOfGame = "Roguelike Shapeshifter TEST"
+nameOfGame = "Roguelike Shapeshifter"
 
 py.display.set_mode((WIDTH, HEIGHT))
 py.display.set_caption(nameOfGame)
@@ -142,25 +142,25 @@ class Platform:
 class Door(Platform):
     def __init__(self, x, y, width, height, platformType):
         super().__init__(x, y, width, height, platformType)
-
         self.isOpen = False
 
-        def openDoor(self):
-            self.isOpen = True
+    def openDoor(self):
+        self.isOpen = True
+        self.platformType = "openDoor"
 
-        
 
 
 themeColourPalettes = {
     "Forest": {
         "background": (34, 139, 34),
         "platform": (139, 69, 19),
-        "door": (205, 133, 63),
+        "door": (164, 116, 73),
     },
     "Dungeon": {
         "background": (100, 110, 120),
         "platform": (100, 120, 140),
-        "door": (205, 133, 63),
+        "closedDoor": (129,97,62),
+        "openDoor": (129,97,62, 50),
     }, 
 }
 
@@ -192,6 +192,7 @@ class Room:
                     rectWidth, rectHeight = 50, 50
                     doorObj = Door(xPos, yPos, rectWidth, rectHeight, "door")
                     self.platforms.append(doorObj)
+                    doorObj.openDoor()
 
     
     def draw(self, camera):
@@ -211,6 +212,8 @@ class CollisionManager:
         
         # Check for vertical collisions
         for platform in room.platforms:
+            if platform.platformType == "openDoor" and platform.isOpen:
+                continue
             platRect = platform.getRect()
             if playerRect.colliderect(platRect):
                 if player.yVelocity > 0:  # Falling down - landed on platform
@@ -227,6 +230,9 @@ class CollisionManager:
         
         # Check horizontal collisions
         for platform in room.platforms:
+            if platform.platformType == "openDoor" and platform.isOpen:
+                print("triggered")
+                continue
             platRect = platform.getRect()
             if playerRect.colliderect(platRect):
                 if player.xVelocity > 0:  # Moving right
