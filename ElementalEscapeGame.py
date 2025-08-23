@@ -272,19 +272,17 @@ while running:
     
     # Handle continuous input
     keys = py.key.get_pressed()
-    if keys[py.K_a] or keys[py.k_d]:
+    if keys[py.K_a] or keys[py.K_d]:
         if keys[py.K_a]:
             mainCharacter.movePlayer(-ACCELERATION)
         elif keys[py.K_d]:
             mainCharacter.movePlayer(ACCELERATION)
-        else:
-            mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
-    elif keys[py.K_LEFT] or keys[py.k_RIGHT]:
+    elif keys[py.K_LEFT] or keys[py.K_RIGHT]:
         if keys[py.K_LEFT]:
             mainCharacter.movePlayer(-ACCELERATION)
         elif keys[py.K_RIGHT]:
             mainCharacter.movePlayer(ACCELERATION)
-        else:
+    else:
             mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
 
 
