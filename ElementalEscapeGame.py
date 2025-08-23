@@ -28,7 +28,7 @@ clock = py.time.Clock()
 startingPosition = [400, 600]
 
 class Player:
-    def __init__(self, width=40, height=80):
+    def __init__(self, width=40, height=70):
         self.position = startingPosition.copy()
         self.width = width
         self.height = height
@@ -121,11 +121,12 @@ class Camera:
         return py.Rect(xScreen, yScreen, screenWidth, screenHeight)
 
 class Platform:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, platformType):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+        self.platformType = platformType
     
     def getRect(self):
         return py.Rect(self.x, self.y, self.width, self.height)
@@ -135,13 +136,18 @@ class Platform:
         screenRect = camera.applyRect(self.getRect())
         if (screenRect.right > -screenRect.width and screenRect.left < WIDTH + screenRect.width and 
             screenRect.bottom > -screenRect.height and screenRect.top < HEIGHT + screenRect.height):
-            platformColour = themeColourPalettes[room.theme]["platform"]
+            platformColour = themeColourPalettes[room.theme][self.platformType]
             py.draw.rect(screen, platformColour, screenRect)
 
 class Door(Platform):
-    def __init__(self, x, y, width, height):
-        super().__init__(x, y, width, height)
+    def __init__(self, x, y, width, height, platformType):
+        super().__init__(x, y, width, height, platformType)
+
         self.isOpen = False
+
+        def openDoor(self):
+            self.isOpen = True
+
         
 
 
@@ -149,10 +155,12 @@ themeColourPalettes = {
     "Forest": {
         "background": (34, 139, 34),
         "platform": (139, 69, 19),
+        "door": (205, 133, 63),
     },
     "Dungeon": {
         "background": (100, 110, 120),
         "platform": (100, 120, 140),
+        "door": (205, 133, 63),
     }, 
 }
 
@@ -178,11 +186,11 @@ class Room:
                 xPos, yPos = x * 50, y * 50
                 if layout[y][x] == 1:
                     rectWidth, rectHeight = 50, 50
-                    platformObj = Platform(xPos, yPos, rectWidth, rectHeight)
+                    platformObj = Platform(xPos, yPos, rectWidth, rectHeight, "platform")
                     self.platforms.append(platformObj)
                 if layout[y][x] == 2:
                     rectWidth, rectHeight = 50, 50
-                    doorObj = Door(xPos, yPos, rectWidth, rectHeight)
+                    doorObj = Door(xPos, yPos, rectWidth, rectHeight, "door")
                     self.platforms.append(doorObj)
 
     
