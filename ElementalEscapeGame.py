@@ -14,6 +14,10 @@ GRAVITY = 0.5
 ACCELERATION = 1
 DECELERATION = 2
 maxSpeed = 8
+standSpeed = 8
+crouchSpeed = 3
+
+JUMPFORCE = 10.5    
 
 nameOfGame = "Roguelike Shapeshifter"
 
@@ -25,7 +29,7 @@ py.mouse.set_visible(False)
 
 clock = py.time.Clock()
 
-startingPosition = [400, 600]
+startingPosition = [100, 800]
 
 class Player:
     def __init__(self, width=40, height=70):
@@ -54,14 +58,18 @@ class Player:
     def crouch(self):
         self.height = self.crouchHeight
         self.position[1] += self.height / 2 # Adjusting position to stay grounded
+        global maxSpeed
+        maxSpeed = crouchSpeed
         
     def stand(self):
         self.height = self.standHeight
         self.position[1] -= self.crouchHeight / 2 # Adjusting position to normal height
+        global maxSpeed
+        maxSpeed = standSpeed
         
     def jump(self):
         if self.onGround:  # Only jump if on ground
-            self.yVelocity = -12
+            self.yVelocity = -JUMPFORCE
 
     def updateGravity(self):
         self.yVelocity += GRAVITY
@@ -144,18 +152,19 @@ class Door(Platform):
         super().__init__(x, y, width, height, platformType)
         self.isOpen = False
 
-    def openDoor(self):
+    def trigger(self):
         self.isOpen = True
         self.platformType = "openDoor"
 
 class Key(Platform):
-    def __init__(self, x, y, width, height, platformType):
+    def __init__(self, x, y, width, height, platformType, targetInteractive):
         super().__init__(x, y, width, height, platformType)
+        self.triggered = False
+        self.targetInteractive = targetInteractive
 
-    def collect(self):
-
-
-        self.collected = False
+    def trigger(self):
+        self.triggered = True
+        self.targetInteractive.trigger()
 
 
 
@@ -184,8 +193,10 @@ class Room:
         self.columns = 22
 
         self.platforms = []
-        self.collectibles = []
-        self.miscellaneous = []
+        self.interactives = []
+
+        self.triggers = roomLayouts[f"{currentRoom}Map"]
+        print(self.triggers)
         
     def loadRoom(self):
         """Load the room layout and create platforms"""
@@ -194,21 +205,31 @@ class Room:
         flatLayout = roomLayouts[self.currentRoom]
         layout = [flatLayout[i*self.columns:(i+1)*self.columns] for i in range(0, self.rows)] # Converts one long list into a list of lists
 
+        interactiveMap = {}
         for y in range(0, self.rows):
             for x in range(0, self.columns):
+                cellVal = layout[y][x]
                 xPos, yPos = x * 50, y * 50
                 rectWidth, rectHeight = 50, 50
-                if layout[y][x] == 1:
+                if cellVal == 1:
                     platformObj = Platform(xPos, yPos, rectWidth, rectHeight, "platform")
                     self.platforms.append(platformObj)
-                if layout[y][x] == 2:
-                    doorObj = Door(xPos, yPos, rectWidth, rectHeight, "door")
+                elif cellVal == 2:
+                    doorObj = Door(xPos, yPos, rectWidth, rectHeight+50, "openDoor")
                     self.platforms.append(doorObj)
-                    doorObj.openDoor()
-                if layout[y][x] == 10:
-                    keyObj = Key(xPos, yPos, rectWidth, rectHeight, "key")
-                    self.collectibles.append(keyObj)
-                    self.miscellaneous.append(keyObj)
+                    interactiveMap[(x, y)] = doorObj
+
+
+        for y in range(0, self.rows):
+            for x in range(0, self.columns):
+                cellVal = layout[y][x]
+                xPos, yPos = x * 50, y * 50
+                rectWidth, rectHeight = 50, 50
+                if cellVal == 10:
+                    targetCoordinates = self.triggers.get((x, y))
+                    targetInteractive = interactiveMap.get(targetCoordinates)
+                    keyObj = Key(xPos, yPos, rectWidth, rectHeight, "key", targetInteractive)
+                    self.interactives.append(keyObj)
                     
 
     
@@ -220,11 +241,11 @@ class Room:
         # Draw platforms with camera offset
         for platform in self.platforms:
             platform.draw(camera)
-        for object in room.miscellaneous:
+        for object in room.interactives:
             object.draw(camera)
 
 class CollisionManager:
-    def handle_collisions(self, player, room):
+    def handleCollisions(self, player, room):
         # Apply vertical movement first
         player.position[1] += player.yVelocity
         playerRect = player.getRect()
@@ -268,12 +289,24 @@ class CollisionManager:
             if groundCheckRect.colliderect(platform.getRect()):
                 player.onGround = True
                 break
+    
+    def handleInteractions(self, player, room):
+            playerRect = player.getRect()
+
+            for object in room.interactives:
+                objectRect = object.getRect()
+                if playerRect.colliderect(objectRect):
+                    try:
+                        object.trigger()
+                    except:
+                        print("Object Failed To Trigger")
+                        continue
 
 # Create game objects
 mainCharacter = Player()
 room = Room()
 room.loadRoom()
-collision_manager = CollisionManager()
+collisionManager = CollisionManager()
 camera = Camera()
 
 """Main game loop"""
@@ -320,7 +353,10 @@ while running:
 
     # Update physics
     mainCharacter.updateGravity()
-    collision_manager.handle_collisions(mainCharacter, room)
+    collisionManager.handleCollisions(mainCharacter, room)
+
+    # Process interactions
+    collisionManager.handleInteractions(mainCharacter, room)
     
     # Update camera to follow player
     camera.follow(mainCharacter.position[0], mainCharacter.position[1])
