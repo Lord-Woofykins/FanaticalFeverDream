@@ -167,7 +167,6 @@ class Key(Platform):
         self.targetInteractive.trigger()
 
 
-
 themeColourPalettes = {
     "Forest": {
         "background": (34, 139, 34),
@@ -219,7 +218,6 @@ class Room:
                     self.platforms.append(doorObj)
                     interactiveMap[(x, y)] = doorObj
 
-
         for y in range(0, self.rows):
             for x in range(0, self.columns):
                 cellVal = layout[y][x]
@@ -231,8 +229,6 @@ class Room:
                     keyObj = Key(xPos, yPos, rectWidth, rectHeight, "key", targetInteractive)
                     self.interactives.append(keyObj)
                     
-
-    
     def draw(self, camera):
         # Draw background
         backgroundColour = themeColourPalettes[self.theme]["background"]
@@ -349,7 +345,6 @@ while running:
             mainCharacter.movePlayer(ACCELERATION)
     else:
             mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
-
 
     # Update physics
     mainCharacter.updateGravity()
