@@ -163,8 +163,9 @@ class Key(Platform):
         self.targetInteractive = targetInteractive
 
     def trigger(self):
-        self.triggered = True
-        self.targetInteractive.trigger()
+        if not self.triggered:
+            self.triggered = True
+            self.targetInteractive.trigger()
 
 
 themeColourPalettes = {
@@ -193,13 +194,18 @@ class Room:
 
         self.platforms = []
         self.interactives = []
+        self.transitions = []
 
-        self.triggers = roomLayouts[f"{currentRoom}Map"]
-        print(self.triggers)
+        # Pulling Room Data from RoolLayouts
+        self.triggers = roomLayouts.get(f"{currentRoom}Interactives", {})
+        self.roomTransitions = roomLayouts.get(f"{currentRoom}Transitions", {})
         
     def loadRoom(self):
         """Load the room layout and create platforms"""
-        self.platforms = []  # Clear existing platforms
+        # Clear Exxisting Room Data
+        self.platforms = []
+        self.interactives = []
+        self.transitions = []
         
         flatLayout = roomLayouts[self.currentRoom]
         layout = [flatLayout[i*self.columns:(i+1)*self.columns] for i in range(0, self.rows)] # Converts one long list into a list of lists
