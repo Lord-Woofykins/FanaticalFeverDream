@@ -68,8 +68,8 @@ rooms = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         ],
-    "hallwayInteractives": {
-
+    "hallwayTransitions": {
+    (0, 13): ("cell", 20, 13)
     },
     "hallwayTransitions": {
 
