@@ -156,6 +156,19 @@ class Door(Platform):
         self.isOpen = True
         self.platformType = "openDoor"
 
+class Transition(Platform):
+    def __init__(self, x, y, width, height, platformType, targetRoom, playerSpawnX, playerSpawnY):
+        super().__init__(x, y, width, height, platformType)
+        self.targetRoom = targetRoom
+        self.playerSpawnX = playerSpawnX
+        self.playerSpawnY = playerSpawnY
+        self.triggered = False
+
+    def trigger(self, player, gameManager):
+        if not self.triggered:
+            self.triggered = True
+            gameManager.changeRoom(self.targetRoom, self.playerSpawnX, self.playerSpawnY)
+
 class Key(Platform):
     def __init__(self, x, y, width, height, platformType, targetInteractive):
         super().__init__(x, y, width, height, platformType)
@@ -179,7 +192,8 @@ themeColourPalettes = {
         "platform": (100, 120, 140),
         "closedDoor": (129,97,62),
         "openDoor": (129,97,62, 50),
-        "key": (203,161,53)
+        "key": (203,161,53),
+        "transition": (255, 50, 100)
     }, 
 }
 
@@ -208,11 +222,19 @@ class Room:
         self.transitions = []
         
         flatLayout = roomLayouts[self.currentRoom]
-        layout = [flatLayout[i*self.columns:(i+1)*self.columns] for i in range(0, self.rows)] # Converts one long list into a list of lists
+        layout = [flatLayout[i*self.columns:(i+1)*self.columns] for i in range(0, self.rows)] # Converts one long list into a list(y) of lists(x)
 
         interactiveMap = {}
         for y in range(0, self.rows):
             for x in range(0, self.columns):
+
+                # Creating and mapping transitions
+                transitionData = self.roomTransitions.get((x, y))   # Get transition data for this cell
+                if transitionData:                                  # Check if transitions exist
+                    targetRoom, spawnX, spawnY = transitionData
+                    transitionObj = Transition(xPos, yPos, rectWidth, rectHeight, "transition", targetRoom, spawnX, spawnY)
+                    self.transitions.append(transitionObj)
+
                 cellVal = layout[y][x]
                 xPos, yPos = x * 50, y * 50
                 rectWidth, rectHeight = 50, 50
@@ -243,8 +265,33 @@ class Room:
         # Draw platforms with camera offset
         for platform in self.platforms:
             platform.draw(camera)
-        for object in room.interactives:
+        for object in self.interactives:
             object.draw(camera)
+
+class GameManager:
+    def __init__(self, player):
+        self.currentRoom = None
+        self.player = player
+        
+    def changeRoom(self, futureRoom, playerX, playerY):
+        """Change to a new room and position the player"""
+        print(f"Changing to room: {futureRoom}")
+        
+        # Create and load the new room
+        self.currentRoom = Room(futureRoom)
+        self.currentRoom.loadRoom()
+        
+        # Position the player at the spawn point
+        self.player.position[0] = playerX
+        self.player.position[1] = playerY
+        
+        # Reset player physics
+        self.player.xVelocity = 0
+        self.player.yVelocity = 0
+        
+        # Reset transition triggers in case player re-enters room
+        for transition in self.currentRoom.transitions:
+            transition.triggered = False
 
 class CollisionManager:
     def handleCollisions(self, player, room):
@@ -292,28 +339,47 @@ class CollisionManager:
                 player.onGround = True
                 break
     
-    def handleInteractions(self, player, room):
-            playerRect = player.getRect()
+    def handleInteractions(self, player, room, gameManager):
+        playerRect = player.getRect()
 
-            for object in room.interactives:
-                objectRect = object.getRect()
-                if playerRect.colliderect(objectRect):
-                    try:
-                        object.trigger()
-                    except:
-                        print("Object Failed To Trigger")
-                        continue
+        # Handle regular interactives (keys, etc.)
+        for object in room.interactives:
+            objectRect = object.getRect()
+            if playerRect.colliderect(objectRect):
+                try:
+                    object.trigger()
+                except AttributeError:
+                    print("Interactive Failed To Trigger")
+                    continue
+
+        # Handle room transitions
+        for transition in room.transitions:
+            transitionRect = transition.getRect()
+            if playerRect.colliderect(transitionRect):
+                try:
+                    transition.trigger(player, gameManager)
+                except:
+                    print("Transition Failed To Trigger")
+                    continue
 
 # Create game objects
 mainCharacter = Player()
-room = Room()
-room.loadRoom()
+gameManager = GameManager(mainCharacter)
+gameManager.currentRoom = Room()
+gameManager.currentRoom.loadRoom() # load room from game manager
+
+# For compatibility with existing code
+room = gameManager.currentRoom
+
 collisionManager = CollisionManager()
 camera = Camera()
 
 """Main game loop"""
 running = True
 while running:
+    # Keep the room reference to that in the game manager
+    room = gameManager.currentRoom
+    
     # Handle events
     for event in py.event.get():
         # Quit game
@@ -357,7 +423,7 @@ while running:
     collisionManager.handleCollisions(mainCharacter, room)
 
     # Process interactions
-    collisionManager.handleInteractions(mainCharacter, room)
+    collisionManager.handleInteractions(mainCharacter, room, gameManager)
     
     # Update camera to follow player
     camera.follow(mainCharacter.position[0], mainCharacter.position[1])
