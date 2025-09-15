@@ -224,6 +224,9 @@ class Room:
         interactiveMap = {}
         for y in range(0, self.rows):
             for x in range(0, self.columns):
+                cellVal = layout[y][x]
+                xPos, yPos = x * 50, y * 50
+                rectWidth, rectHeight = 50, 50
 
                 # Creating and mapping transitions
                 transitionData = self.roomTransitions.get((x, y))   # Get transition data for this cell
@@ -232,9 +235,6 @@ class Room:
                     transitionObj = Transition(xPos, yPos, rectWidth, rectHeight, "transition", targetRoom, spawnX, spawnY)
                     self.transitions.append(transitionObj)
 
-                cellVal = layout[y][x]
-                xPos, yPos = x * 50, y * 50
-                rectWidth, rectHeight = 50, 50
                 if cellVal == 1:
                     platformObj = Platform(xPos, yPos, rectWidth, rectHeight, "platform")
                     self.platforms.append(platformObj)
@@ -273,6 +273,7 @@ class GameManager:
     def changeRoom(self, futureRoom, playerX, playerY):
         """Change to a new room and position the player"""
         print(f"Changing to room: {futureRoom}")
+        print(f"Spawning player at: ({playerX}, {playerY})")
         
         # Create and load the new room
         self.currentRoom = Room(futureRoom)
