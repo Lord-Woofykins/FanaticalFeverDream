@@ -164,7 +164,7 @@ class Transition(Platform):
         self.playerSpawnY = playerSpawnY
 
     def trigger(self, player, gameManager):
-        gameManager.changeRoom(self.targetRoom, self.playerSpawnX, self.playerSpawnY)
+        gameManager.changeRoom(self.targetRoom, self.playerSpawnX*50, self.playerSpawnY*50)
 
 class Key(Platform):
     def __init__(self, x, y, width, height, platformType, targetInteractive):
@@ -286,6 +286,8 @@ class GameManager:
         # Reset player physics
         self.player.xVelocity = 0
         self.player.yVelocity = 0
+
+        camera.follow(playerX, playerY)
         
 
 class CollisionManager:
@@ -422,6 +424,8 @@ while running:
     
     # Update camera to follow player
     camera.follow(mainCharacter.position[0], mainCharacter.position[1])
+    print(f"Camera Position: ({camera.x:.2f}, {camera.y:.2f})")
+    print(f"Player Position: ({mainCharacter.position[0]:.2f}, {mainCharacter.position[1]:.2f})")
     
     # Draw game for player
     room.draw(camera)
