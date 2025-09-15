@@ -162,12 +162,9 @@ class Transition(Platform):
         self.targetRoom = targetRoom
         self.playerSpawnX = playerSpawnX
         self.playerSpawnY = playerSpawnY
-        self.triggered = False
 
     def trigger(self, player, gameManager):
-        if not self.triggered:
-            self.triggered = True
-            gameManager.changeRoom(self.targetRoom, self.playerSpawnX, self.playerSpawnY)
+        gameManager.changeRoom(self.targetRoom, self.playerSpawnX, self.playerSpawnY)
 
 class Key(Platform):
     def __init__(self, x, y, width, height, platformType, targetInteractive):
@@ -289,9 +286,6 @@ class GameManager:
         self.player.xVelocity = 0
         self.player.yVelocity = 0
         
-        # Reset transition triggers in case player re-enters room
-        for transition in self.currentRoom.transitions:
-            transition.triggered = False
 
 class CollisionManager:
     def handleCollisions(self, player, room):
