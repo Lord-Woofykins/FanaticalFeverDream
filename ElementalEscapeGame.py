@@ -1,5 +1,6 @@
 import pygame as py
 from RoomLayouts import rooms as roomLayouts
+import sys
 
 py.init() # Initialize Pygame Modules
 
@@ -8,6 +9,8 @@ GREEN = (0, 128, 0)
 
 # Setting Up Window
 WIDTH, HEIGHT = 1100, 800
+
+FRAMETIME = 60
 
 GRAVITY = 0.5
 
@@ -288,6 +291,45 @@ class GameManager:
         self.player.yVelocity = 0
 
         camera.follow(playerX, playerY)
+
+        self.transitionFade()
+
+    def transitionFade(self):
+        fadeSurface = py.Surface((WIDTH, HEIGHT), py.SRCALPHA)
+        fadeSteps = 20  # increasing this value decreases fade speed
+
+        # Fade out
+        for step in range(fadeSteps + 1):
+            alpha = int((step / fadeSteps) * 255)
+
+            # create a sudo game loop while fade occurs ro process essential changes
+            self.currentRoom.draw(camera)
+            self.player.draw(camera)
+            # overlay with alpha
+            fadeSurface.fill((0, 0, 0, alpha))
+            screen.blit(fadeSurface, (0, 0))
+            py.display.flip()
+
+            for event in py.event.get():
+                if event.type == py.QUIT:
+                    py.quit()
+                    sys.exit()
+            clock.tick(FRAMETIME)
+
+        # Fade in
+        for i in range(fadeSteps + 1):
+            alpha = int(((fadeSteps - i) / fadeSteps) * 255)
+            self.currentRoom.draw(camera)
+            self.player.draw(camera)
+            fadeSurface.fill((0, 0, 0, alpha))
+            screen.blit(fadeSurface, (0, 0))
+            py.display.flip()
+
+            for event in py.event.get():
+                if event.type == py.QUIT:
+                    py.quit()
+                    sys.exit()
+            clock.tick(FRAMETIME)
         
 
 class CollisionManager:
@@ -433,6 +475,6 @@ while running:
     
     # Update the display
     py.display.flip()
-    clock.tick(60)
+    clock.tick(FRAMETIME)
 
 py.quit()
