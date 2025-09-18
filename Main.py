@@ -1,11 +1,11 @@
 import pygame as py
-import sys
 
 # Import classes form other files
-from Enemies import GroundEnemy, FlyingEnemy, DemonEnemy
 from Player import Player
 from Room import Room
 from Camera import Camera
+from CollisionManager import CollisionManager
+from GameManager import GameManager
 
 # Import dictionaries
 from ColourPalettes import themeColourPalettes
@@ -29,160 +29,16 @@ py.mouse.set_visible(False)
 
 clock = py.time.Clock()
 
-
-class GameManager:
-    def __init__(self, player):
-        self.currentRoom = None
-        self.player = player
-        
-    def changeRoom(self, futureRoom, playerX, playerY):
-        """Change to a new room and position the player"""
-        print(f"Changing to room: {futureRoom}")
-        print(f"Spawning player at: ({playerX}, {playerY})")
-        
-        # Create and load the new room
-        self.currentRoom = Room(futureRoom)
-        self.currentRoom.loadRoom()
-        
-        # Position the player at the spawn point
-        self.player.position[0] = playerX
-        self.player.position[1] = playerY
-        
-        # Reset player physics
-        self.player.xVelocity = 0
-        self.player.yVelocity = 0
-
-        camera.follow(self.currentRoom, playerX, playerY)
-
-        self.transitionFade()
-
-    def transitionFade(self):
-        fadeSurface = py.Surface((WIDTH, HEIGHT), py.SRCALPHA)
-        fadeSteps = 20  # increasing this value decreases fade speed
-
-        # Fade out
-        for step in range(fadeSteps + 1):
-            alpha = int((step / fadeSteps) * 255)
-
-            # create a sudo game loop while fade occurs ro process essential changes
-            self.currentRoom.draw(camera, screen)
-            self.player.draw(camera)
-            # overlay with alpha
-            fadeSurface.fill((0, 0, 0, alpha))
-            screen.blit(fadeSurface, (0, 0))
-            py.display.flip()
-
-            for event in py.event.get():
-                if event.type == py.QUIT:
-                    py.quit()
-                    sys.exit()
-            clock.tick(FRAMETIME)
-
-        # Fade in
-        for i in range(fadeSteps + 1):
-            alpha = int(((fadeSteps - i) / fadeSteps) * 255)
-            self.currentRoom.draw(camera, screen)
-            self.player.draw(camera)
-            fadeSurface.fill((0, 0, 0, alpha))
-            screen.blit(fadeSurface, (0, 0))
-            py.display.flip()
-
-            for event in py.event.get():
-                if event.type == py.QUIT:
-                    py.quit()
-                    sys.exit()
-            clock.tick(FRAMETIME)
-        
-
-class CollisionManager:
-    def handleCollisions(self, player, room):
-        # Apply vertical movement first
-        player.position[1] += player.yVelocity
-        playerRect = player.getRect()
-        
-        # Check for vertical collisions
-        for platform in room.platforms:
-            if platform.platformType == "openDoor" and platform.isOpen:
-                continue
-            platRect = platform.getRect()
-            if playerRect.colliderect(platRect):
-                if player.yVelocity > 0:  # Falling down - landed on platform
-                    player.position[1] = platform.y - player.height / 2
-                    player.yVelocity = 0
-                elif player.yVelocity < 0:  # Moving up - hit ceiling
-                    player.position[1] = platform.y + platform.height + player.height / 2
-                    player.yVelocity = 0
-                break
-
-        # Apply horizontal movement
-        player.position[0] += player.xVelocity
-        playerRect = player.getRect()
-        
-        # Check horizontal collisions
-        for platform in room.platforms:
-            if platform.platformType == "openDoor" and platform.isOpen:
-                continue
-            platRect = platform.getRect()
-            if playerRect.colliderect(platRect):
-                if player.xVelocity > 0:  # Moving right
-                    player.position[0] = platform.x - player.width / 2
-                elif player.xVelocity < 0:  # Moving left
-                    player.position[0] = platform.x + platform.width + player.width / 2
-                player.xVelocity = 0
-                break
-
-        # Check if player is on ground (separate check after movement)
-        player.onGround = False
-        groundCheckRect = py.Rect(player.position[0] - player.width/2, player.position[1] + player.height/2, player.width, 2)  # Small rect below player
-        
-        for platform in room.platforms:
-            if groundCheckRect.colliderect(platform.getRect()):
-                player.onGround = True
-                break
-    
-    def handleInteractions(self, player, room, gameManager):
-        playerRect = player.getRect()
-
-        # Handle regular interactives (keys, etc.)
-        for object in room.interactives:
-            objectRect = object.getRect()
-            if playerRect.colliderect(objectRect):
-                try:
-                    object.trigger()
-                except AttributeError:
-                    print("Interactive Failed To Trigger")
-                    continue
-
-        # Handle room transitions
-        for transition in room.transitions:
-            transitionRect = transition.getRect()
-            if playerRect.colliderect(transitionRect):
-                try:
-                    transition.trigger(gameManager)
-                except:
-                    print("Transition Failed To Trigger")
-                    continue
-
-    def checkEnemyCollisions(self, player, enemies):
-        playerRect = player.getRect()
-        for enemy in enemies:
-            enemyRect = py.Rect(enemy.position[0] - enemy.width/2, enemy.position[1] - enemy.height/2, enemy.width, enemy.height)
-            if playerRect.colliderect(enemyRect):
-                pass
-
-
-
 # Create game objects
 mainCharacter = Player()
-gameManager = GameManager(mainCharacter)
+camera = Camera()
+
+collisionManager = CollisionManager()
+gameManager = GameManager(mainCharacter, FRAMETIME)
 gameManager.currentRoom = Room()
 gameManager.currentRoom.loadRoom() # load room from game manager
 
-# For compatibility with existing code
 room = gameManager.currentRoom
-
-collisionManager = CollisionManager()
-camera = Camera()
 
 """Main game loop"""
 running = True
@@ -233,7 +89,7 @@ while running:
     collisionManager.handleCollisions(mainCharacter, room)
 
     # Process interactions
-    collisionManager.handleInteractions(mainCharacter, room, gameManager)
+    collisionManager.handleInteractions(mainCharacter, room, gameManager, camera)
     
     # Update camera to follow player
     camera.follow(room, mainCharacter.position[0], mainCharacter.position[1])

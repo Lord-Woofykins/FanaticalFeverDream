@@ -40,8 +40,8 @@ class Transition(Platform):
         self.playerSpawnX = playerSpawnX
         self.playerSpawnY = playerSpawnY
 
-    def trigger(self, gameManager):
-        gameManager.changeRoom(self.targetRoom, self.playerSpawnX*50, self.playerSpawnY*50)
+    def trigger(self, gameManager, camera):
+        gameManager.changeRoom(self.targetRoom, self.playerSpawnX*50, self.playerSpawnY*50, camera)
 
 class Key(Platform):
     def __init__(self, x, y, width, height, platformType, targetInteractive, theme):
