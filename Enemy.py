@@ -22,5 +22,5 @@ class GroundEnemy(Enemy):
             self.direction *= -1  # Change direction
     
     def draw(self, camera):
-        enemyRect = py.Rect(self.position[0] - camera[0], self.position[1] - camera[1], self.width, self.height)
+        enemyRect = py.Rect(self.position[0] - camera.x, self.position[1] - camera.y, self.width, self.height)
         py.draw.rect(py.display.get_surface(), self.colour, enemyRect)  # Draw enemy as a red rectangle
