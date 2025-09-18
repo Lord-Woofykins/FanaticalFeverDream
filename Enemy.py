@@ -8,6 +8,9 @@ class Enemy:
         self.speed = speed
         self.direction = direction # 1 is right, -1 is left
         self.patrolRange = patrolRange
+    
+    def getRect(self):
+        return py.Rect(self.position[0], self.position[1] - (self.height-50), self.width, self.height)
 
     
 class GroundEnemy(Enemy):
@@ -22,7 +25,7 @@ class GroundEnemy(Enemy):
             self.direction *= -1  # Change direction
     
     def draw(self, camera):
-        enemyRect = py.Rect(self.position[0], self.position[1] - (self.height-50), self.width, self.height)
+        enemyRect = self.getRect()
         screenRect = camera.applyRect(enemyRect)
         py.draw.rect(py.display.get_surface(), self.colour, screenRect)
 
@@ -38,7 +41,7 @@ class FlyingEnemy(Enemy):
             self.direction *= -1  # Change direction
     
     def draw(self, camera):
-        enemyRect = py.Rect(self.position[0] - camera.x, self.position[1] - camera.y, self.width, self.height)
+        enemyRect = self.getRect()
         py.draw.rect(py.display.get_surface(), self.colour, enemyRect)
 
 class DemonEnemy(Enemy):
@@ -53,5 +56,5 @@ class DemonEnemy(Enemy):
             self.direction *= -1  # Change direction
     
     def draw(self, camera):
-        enemyRect = py.Rect(self.position[0] - camera.x, self.position[1] - camera.y, self.width, self.height)
+        enemyRect = py.Rect(self.position[0], self.position[1] - (self.height-50), self.width, self.height)
         py.draw.rect(py.display.get_surface(), self.colour, enemyRect)

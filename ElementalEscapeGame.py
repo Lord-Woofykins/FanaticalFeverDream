@@ -4,24 +4,15 @@ import sys
 
 # Import classes form other files
 from Enemy import GroundEnemy
+from Player import Player
 
 py.init() # Initialize Pygame Modules
-
-# Constants
-GREEN = (0, 128, 0)
 
 # Setting Up Window
 WIDTH, HEIGHT = 1100, 800
 
 FRAMETIME = 60
 
-GRAVITY = 0.5
-
-ACCELERATION = 1
-DECELERATION = 2
-maxSpeed = 8
-standSpeed = 8
-crouchSpeed = 3
 
 JUMPFORCE = 10.5    
 
@@ -34,63 +25,6 @@ screen = py.display.get_surface()
 py.mouse.set_visible(False)
 
 clock = py.time.Clock()
-
-startingPosition = [100, 800]
-
-class Player:
-    def __init__(self, width=40, height=70):
-        self.position = startingPosition.copy()
-        self.width = width
-        self.height = height
-
-        self.standHeight = height
-        self.crouchHeight = min(50, height/2) # Dynamic height adjustment for changing later
-
-        self.yVelocity = 0
-        self.xVelocity = 0
-
-        self.onGround = False
-
-    def movePlayer(self, xAcceleration):
-        self.xVelocity += xAcceleration
-        self.xVelocity = max(-maxSpeed, min(self.xVelocity, maxSpeed)) # Limit horizontal speed by: max(absolute minimum, actual speed capped at maximum)-> restricted velocity
-
-        if xAcceleration == 0:
-            if self.xVelocity > 0:
-                self.xVelocity = max(0, self.xVelocity - DECELERATION)
-            elif self.xVelocity < 0:
-                self.xVelocity = min(0, self.xVelocity + DECELERATION)
-    
-    def crouch(self):
-        self.height = self.crouchHeight
-        self.position[1] += self.height / 2 # Adjusting position to stay grounded
-        global maxSpeed
-        maxSpeed = crouchSpeed
-        
-    def stand(self):
-        self.height = self.standHeight
-        self.position[1] -= self.crouchHeight / 2 # Adjusting position to normal height
-        global maxSpeed
-        maxSpeed = standSpeed
-        
-    def jump(self):
-        if self.onGround:  # Only jump if on ground
-            self.yVelocity = -JUMPFORCE
-
-    def updateGravity(self):
-        self.yVelocity += GRAVITY
-
-    def getRect(self):
-        return py.Rect(self.position[0] - (self.width / 2), self.position[1] - (self.height / 2), 
-        self.width, self.height)
-
-    def draw(self, camera):
-        # Create a rect for the player in world coordinates
-        playerRect = py.Rect(self.position[0] - self.width/2, self.position[1] - self.height/2, self.width, self.height)
-        # Apply camera offset and zoom to the entire rectangle
-        screenRect = camera.applyRect(playerRect)
-        py.draw.rect(screen, GREEN, screenRect)
-
 
 
 class Camera:
@@ -471,14 +405,14 @@ while running:
     keys = py.key.get_pressed()
     if keys[py.K_a] or keys[py.K_d]:
         if keys[py.K_a]:
-            mainCharacter.movePlayer(-ACCELERATION)
+            mainCharacter.movePlayer(-mainCharacter.acceleration)
         elif keys[py.K_d]:
-            mainCharacter.movePlayer(ACCELERATION)
+            mainCharacter.movePlayer(mainCharacter.acceleration)
     elif keys[py.K_LEFT] or keys[py.K_RIGHT]:
         if keys[py.K_LEFT]:
-            mainCharacter.movePlayer(-ACCELERATION)
+            mainCharacter.movePlayer(-mainCharacter.acceleration)
         elif keys[py.K_RIGHT]:
-            mainCharacter.movePlayer(ACCELERATION)
+            mainCharacter.movePlayer(mainCharacter.acceleration)
     else:
             mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
 
