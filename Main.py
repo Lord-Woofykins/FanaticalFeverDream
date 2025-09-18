@@ -1,6 +1,7 @@
+# Import modules
 import pygame as py
 
-# Import classes form other files
+# Import classes from other files
 from Player import Player
 from Room import Room
 from Camera import Camera
@@ -12,29 +13,25 @@ from ColourPalettes import themeColourPalettes
 
 py.init() # Initialize Pygame Modules
 
-# Setting Up Window
+"""Setting Up Window"""
 WIDTH, HEIGHT = 1100, 800
 
-FRAMETIME = 60
-
-JUMPFORCE = 10.5    
-
-nameOfGame = "Roguelike Shapeshifter"
-
 py.display.set_mode((WIDTH, HEIGHT))
-py.display.set_caption(nameOfGame)
-screen = py.display.get_surface()
-
+py.display.set_caption("Roguelike Shapeshifter")
 py.mouse.set_visible(False)
 
+screen = py.display.get_surface()
 clock = py.time.Clock()
 
 # Create game objects
 mainCharacter = Player()
 camera = Camera()
 
+# Create managers
 collisionManager = CollisionManager()
-gameManager = GameManager(mainCharacter, FRAMETIME)
+gameManager = GameManager(mainCharacter, 60)
+
+# Initialize the first room
 gameManager.currentRoom = Room()
 gameManager.currentRoom.loadRoom() # load room from game manager
 
@@ -108,6 +105,6 @@ while running:
 
     # Update the display
     py.display.flip()
-    clock.tick(FRAMETIME)
+    clock.tick(gameManager.frametime)
 
 py.quit()
