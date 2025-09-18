@@ -1,10 +1,14 @@
 import pygame as py
-from RoomLayouts import rooms as roomLayouts
 import sys
 
 # Import classes form other files
-from Enemy import GroundEnemy
+from Enemies import GroundEnemy, FlyingEnemy, DemonEnemy
 from Player import Player
+from Room import Room
+from Camera import Camera
+
+# Import dictionaries
+from ColourPalettes import themeColourPalettes
 
 py.init() # Initialize Pygame Modules
 
@@ -12,7 +16,6 @@ py.init() # Initialize Pygame Modules
 WIDTH, HEIGHT = 1100, 800
 
 FRAMETIME = 60
-
 
 JUMPFORCE = 10.5    
 
@@ -26,197 +29,6 @@ py.mouse.set_visible(False)
 
 clock = py.time.Clock()
 
-
-class Camera:
-    def __init__(self, zoom=1.4):
-        self.x = 0
-        self.y = 0
-        self.xTarget = 0
-        self.yTarget = 0
-        self.smoothing = 0.6  # Lower = smoother, higher = more responsive
-        self.zoom = zoom
-        
-        # Calculate effective screen size
-        self.viewWidth = WIDTH / self.zoom
-        self.viewHeight = HEIGHT / self.zoom
-    
-    def follow(self, xTarget, yTarget):
-        # Calculate where the camera should be to center the target (accounting for zoom)
-        self.xTarget = xTarget - self.viewWidth // 2
-        self.yTarget = yTarget - self.viewHeight // 2
-        
-        # Smooth camera movement
-        self.x += (self.xTarget - self.x) * self.smoothing
-        self.y += (self.yTarget - self.y) * self.smoothing
-        
-        # Constrain camera to room bounds (accounting for zoom)
-        roomWidth = room.columns * 50
-        roomHeight = room.rows * 50
-        
-        self.x = max(0, min(self.x, roomWidth - self.viewWidth))
-        self.y = max(0, min(self.y, roomHeight - self.viewHeight))
-    
-    def apply(self, x, y):
-        """Convert world coordinates to screen coordinates with zoom"""
-        xScreen = (x - self.x) * self.zoom
-        yScreen = (y - self.y) * self.zoom
-        return int(xScreen), int(yScreen)
-    
-    def applyRect(self, rect):
-        """Apply camera offset and zoom to a rectangle"""
-        xScreen = (rect.x - self.x) * self.zoom
-        yScreen = (rect.y - self.y) * self.zoom
-        screenWidth = rect.width * self.zoom
-        screenHeight = rect.height * self.zoom
-        return py.Rect(xScreen, yScreen, screenWidth, screenHeight)
-
-class Platform:
-    def __init__(self, x, y, width, height, platformType):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.platformType = platformType
-    
-    def getRect(self):
-        return py.Rect(self.x, self.y, self.width, self.height)
-    
-    def draw(self, camera):
-        # Only draw if platform is visible on screen (with zoom consideration)
-        screenRect = camera.applyRect(self.getRect())
-        if (screenRect.right > -screenRect.width and screenRect.left < WIDTH + screenRect.width and 
-            screenRect.bottom > -screenRect.height and screenRect.top < HEIGHT + screenRect.height):
-            platformColour = themeColourPalettes[room.theme][self.platformType]
-            py.draw.rect(screen, platformColour, screenRect)
-
-class Door(Platform):
-    def __init__(self, x, y, width, height, platformType):
-        super().__init__(x, y, width, height, platformType)
-        self.isOpen = False
-
-    def trigger(self):
-        self.isOpen = True
-        self.platformType = "openDoor"
-
-class Transition(Platform):
-    def __init__(self, x, y, width, height, platformType, targetRoom, playerSpawnX, playerSpawnY):
-        super().__init__(x, y, width, height, platformType)
-        self.targetRoom = targetRoom
-        self.playerSpawnX = playerSpawnX
-        self.playerSpawnY = playerSpawnY
-
-    def trigger(self, gameManager):
-        gameManager.changeRoom(self.targetRoom, self.playerSpawnX*50, self.playerSpawnY*50)
-
-class Key(Platform):
-    def __init__(self, x, y, width, height, platformType, targetInteractive):
-        super().__init__(x, y, width, height, platformType)
-        self.triggered = False
-        self.targetInteractive = targetInteractive
-
-    def trigger(self):
-        if not self.triggered:
-            self.triggered = True
-            self.targetInteractive.trigger()
-
-
-themeColourPalettes = {
-    "Forest": {
-        "background": (34, 139, 34),
-        "platform": (139, 69, 19),
-        "door": (164, 116, 73),
-    },
-    "Dungeon": {
-        "background": (100, 110, 120),
-        "platform": (100, 120, 140),
-        "closedDoor": (129,97,62),
-        "openDoor": (129,97,62, 50),
-        "key": (203,161,53),
-        "transition": (255, 50, 100),
-        "groundEnemy": (150, 0, 0),
-    }, 
-}
-
-class Room:
-    def __init__(self, currentRoom="cell", theme="Dungeon"):
-        self.width = WIDTH
-        self.height = HEIGHT
-        self.currentRoom = currentRoom
-        self.theme = theme
-        self.rows = 16
-        self.columns = 22
-
-        self.platforms = []
-        self.interactives = []
-        self.transitions = []
-        self.enemies = []
-
-        # Pulling Room Data from RoolLayouts
-        self.triggers = roomLayouts.get(f"{currentRoom}Interactives", {})
-        self.roomTransitions = roomLayouts.get(f"{currentRoom}Transitions", {})
-        
-    def loadRoom(self):
-        """Load the room layout and create platforms"""
-        # Clear Exxisting Room Data
-        self.platforms = []
-        self.interactives = []
-        self.transitions = []
-        
-        flatLayout = roomLayouts[self.currentRoom]
-        layout = [flatLayout[i*self.columns:(i+1)*self.columns] for i in range(0, self.rows)] # Converts one long list into a list(y) of lists(x)
-
-        interactiveMap = {}
-        for y in range(0, self.rows):
-            for x in range(0, self.columns):
-                cellVal = layout[y][x]
-                xPos, yPos = x * 50, y * 50
-                rectWidth, rectHeight = 50, 50
-
-                # Creating and mapping transitions
-                transitionData = self.roomTransitions.get((x, y))   # Get transition data for this cell
-                if transitionData:                                  # Check if transitions exist
-                    targetRoom, spawnX, spawnY = transitionData
-                    transitionObj = Transition(xPos, yPos, rectWidth, rectHeight, "transition", targetRoom, spawnX, spawnY)
-                    self.transitions.append(transitionObj)
-
-                if cellVal == 1:
-                    platformObj = Platform(xPos, yPos, rectWidth, rectHeight, "platform")
-                    self.platforms.append(platformObj)
-                elif cellVal == 2:
-                    doorObj = Door(xPos, yPos, rectWidth, rectHeight+50, "openDoor")
-                    self.platforms.append(doorObj)
-                    interactiveMap[(x, y)] = doorObj
-                elif int(cellVal/10) == 2:
-                    if cellVal - 20 == 1:
-                        direction = 1
-                    elif cellVal - 20 == 2:
-                        direction = -1
-                    enemyObj = GroundEnemy(x*50, y*50, 40, 60, 2, direction, 4*50, themeColourPalettes[self.theme]["groundEnemy"]) # xPos, yPos, width, height, speed, direction, patrolRange
-                    self.enemies.append(enemyObj)
-
-
-        # Second loop for interacrtives relying on other objects created first
-        for y in range(0, self.rows):
-            for x in range(0, self.columns):
-                cellVal = layout[y][x]
-                xPos, yPos = x * 50, y * 50
-                rectWidth, rectHeight = 50, 50
-                if cellVal == 10:
-                    targetCoordinates = self.triggers.get((x, y))
-                    targetInteractive = interactiveMap.get(targetCoordinates)
-                    keyObj = Key(xPos, yPos, rectWidth, rectHeight, "key", targetInteractive)
-                    self.interactives.append(keyObj)
-                    
-    def draw(self, camera):
-        # Draw background
-        backgroundColour = themeColourPalettes[self.theme]["background"]
-        screen.fill(backgroundColour)
-        
-        # Draw platforms with camera offset
-        for platform in self.platforms:
-            platform.draw(camera)
-        for object in self.interactives:
-            object.draw(camera)
 
 class GameManager:
     def __init__(self, player):
@@ -240,7 +52,7 @@ class GameManager:
         self.player.xVelocity = 0
         self.player.yVelocity = 0
 
-        camera.follow(playerX, playerY)
+        camera.follow(self.currentRoom, playerX, playerY)
 
         self.transitionFade()
 
