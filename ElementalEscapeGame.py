@@ -2,6 +2,9 @@ import pygame as py
 from RoomLayouts import rooms as roomLayouts
 import sys
 
+# Import classes form other files
+from Enemy import GroundEnemy
+
 py.init() # Initialize Pygame Modules
 
 # Constants
@@ -87,27 +90,6 @@ class Player:
         # Apply camera offset and zoom to the entire rectangle
         screenRect = camera.applyRect(playerRect)
         py.draw.rect(screen, GREEN, screenRect)
-
-class Enemy:
-    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange):
-        self.position = [xPosition, yPosition]
-        self.width = width
-        self.height = height
-        self.speed = speed
-        self.direction = direction # 1 is right, -1 is left
-        self.patrolRange = patrolRange
-
-    
-class GroundEnemy(Enemy):
-    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange):
-        super().__init__(xPosition, yPosition, width, height, speed, direction, patrolRange)
-        self.xInitial = xPosition
-
-    def patrol(self):
-        self.position[0] += self.speed * self.direction
-        if abs(self.position[0] - self.xInitial) >= self.patrolRange:
-            self.direction *= -1  # Change direction
-    
 
 
 
@@ -216,7 +198,8 @@ themeColourPalettes = {
         "closedDoor": (129,97,62),
         "openDoor": (129,97,62, 50),
         "key": (203,161,53),
-        "transition": (255, 50, 100)
+        "transition": (255, 50, 100),
+        "groundEnemy": (150, 0, 0),
     }, 
 }
 
@@ -232,6 +215,7 @@ class Room:
         self.platforms = []
         self.interactives = []
         self.transitions = []
+        self.enemies = []
 
         # Pulling Room Data from RoolLayouts
         self.triggers = roomLayouts.get(f"{currentRoom}Interactives", {})
@@ -268,7 +252,16 @@ class Room:
                     doorObj = Door(xPos, yPos, rectWidth, rectHeight+50, "openDoor")
                     self.platforms.append(doorObj)
                     interactiveMap[(x, y)] = doorObj
+                elif int(cellVal/10) == 2:
+                    if cellVal - 20 == 1:
+                        direction = 1
+                    elif cellVal - 20 == 2:
+                        direction = -1
+                    enemyObj = GroundEnemy(x*50, y*50, 40, 60, 2, direction, 4*50, themeColourPalettes[self.theme]["groundEnemy"]) # xPos, yPos, width, height, speed, direction, patrolRange
+                    self.enemies.append(enemyObj)
 
+
+        # Second loop for interacrtives relying on other objects created first
         for y in range(0, self.rows):
             for x in range(0, self.columns):
                 cellVal = layout[y][x]
@@ -432,7 +425,7 @@ class CollisionManager:
                 pass
 
 
-            
+
 # Create game objects
 mainCharacter = Player()
 gameManager = GameManager(mainCharacter)
@@ -504,7 +497,13 @@ while running:
     # Draw game for player
     room.draw(camera)
     mainCharacter.draw(camera)
-    
+
+    # Update and draw enemies
+    for enemy in room.enemies:
+        enemy.patrol()
+        enemy.draw(camera)
+        collisionManager.checkEnemyCollisions(mainCharacter, room.enemies)
+
     # Update the display
     py.display.flip()
     clock.tick(FRAMETIME)
