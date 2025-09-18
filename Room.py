@@ -72,3 +72,14 @@ class Room:
                     targetInteractive = interactiveMap.get(targetCoordinates)
                     keyObj = Key(xPos, yPos, rectWidth, rectHeight, "key", targetInteractive, self.theme)
                     self.interactives.append(keyObj)
+    
+    def draw(self, camera, screen):
+        # Draw background
+        backgroundColour = themeColourPalettes[self.theme]["background"]
+        screen.fill(backgroundColour)
+
+        # Draw platforms with camera offset
+        for platform in self.platforms:
+            platform.draw(camera)
+        for object in self.interactives:
+            object.draw(camera)

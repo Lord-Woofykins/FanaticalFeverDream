@@ -65,7 +65,7 @@ class GameManager:
             alpha = int((step / fadeSteps) * 255)
 
             # create a sudo game loop while fade occurs ro process essential changes
-            self.currentRoom.draw(camera)
+            self.currentRoom.draw(camera, screen)
             self.player.draw(camera)
             # overlay with alpha
             fadeSurface.fill((0, 0, 0, alpha))
@@ -81,7 +81,7 @@ class GameManager:
         # Fade in
         for i in range(fadeSteps + 1):
             alpha = int(((fadeSteps - i) / fadeSteps) * 255)
-            self.currentRoom.draw(camera)
+            self.currentRoom.draw(camera, screen)
             self.player.draw(camera)
             fadeSurface.fill((0, 0, 0, alpha))
             screen.blit(fadeSurface, (0, 0))
@@ -236,12 +236,12 @@ while running:
     collisionManager.handleInteractions(mainCharacter, room, gameManager)
     
     # Update camera to follow player
-    camera.follow(mainCharacter.position[0], mainCharacter.position[1])
+    camera.follow(room, mainCharacter.position[0], mainCharacter.position[1])
     print(f"Camera Position: ({camera.x:.2f}, {camera.y:.2f})")
     print(f"Player Position: ({mainCharacter.position[0]:.2f}, {mainCharacter.position[1]:.2f})")
     
     # Draw game for player
-    room.draw(camera)
+    room.draw(camera, screen)
     mainCharacter.draw(camera)
 
     # Update and draw enemies
