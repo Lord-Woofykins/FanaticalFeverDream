@@ -22,5 +22,36 @@ class GroundEnemy(Enemy):
             self.direction *= -1  # Change direction
     
     def draw(self, camera):
+        enemyRect = py.Rect(self.position[0], self.position[1] - (self.height-50), self.width, self.height)
+        screenRect = camera.applyRect(enemyRect)
+        py.draw.rect(py.display.get_surface(), self.colour, screenRect)
+
+class FlyingEnemy(Enemy):
+    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, colour):
+        super().__init__(xPosition, yPosition, width, height, speed, direction, patrolRange)
+        self.xInitial = xPosition
+        self.colour = colour
+
+    def patrol(self):
+        self.position[0] += self.speed * self.direction
+        if abs(self.position[0] - self.xInitial) >= self.patrolRange:
+            self.direction *= -1  # Change direction
+    
+    def draw(self, camera):
         enemyRect = py.Rect(self.position[0] - camera.x, self.position[1] - camera.y, self.width, self.height)
-        py.draw.rect(py.display.get_surface(), self.colour, enemyRect)  # Draw enemy as a red rectangle
+        py.draw.rect(py.display.get_surface(), self.colour, enemyRect)
+
+class DemonEnemy(Enemy):
+    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, colour):
+        super().__init__(xPosition, yPosition, width, height, speed, direction, patrolRange)
+        self.xInitial = xPosition
+        self.colour = colour
+
+    def patrol(self):
+        self.position[0] += self.speed * self.direction
+        if abs(self.position[0] - self.xInitial) >= self.patrolRange:
+            self.direction *= -1  # Change direction
+    
+    def draw(self, camera):
+        enemyRect = py.Rect(self.position[0] - camera.x, self.position[1] - camera.y, self.width, self.height)
+        py.draw.rect(py.display.get_surface(), self.colour, enemyRect)
