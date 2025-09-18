@@ -88,6 +88,29 @@ class Player:
         screenRect = camera.applyRect(playerRect)
         py.draw.rect(screen, GREEN, screenRect)
 
+class Enemy:
+    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange):
+        self.position = [xPosition, yPosition]
+        self.width = width
+        self.height = height
+        self.speed = speed
+        self.direction = direction # 1 is right, -1 is left
+        self.patrolRange = patrolRange
+
+    
+class GroundEnemy(Enemy):
+    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange):
+        super().__init__(xPosition, yPosition, width, height, speed, direction, patrolRange)
+        self.xInitial = xPosition
+
+    def patrol(self):
+        self.position[0] += self.speed * self.direction
+        if abs(self.position[0] - self.xInitial) >= self.patrolRange:
+            self.direction *= -1  # Change direction
+    
+
+
+
 class Camera:
     def __init__(self, zoom=1.4):
         self.x = 0
@@ -166,7 +189,7 @@ class Transition(Platform):
         self.playerSpawnX = playerSpawnX
         self.playerSpawnY = playerSpawnY
 
-    def trigger(self, player, gameManager):
+    def trigger(self, gameManager):
         gameManager.changeRoom(self.targetRoom, self.playerSpawnX*50, self.playerSpawnY*50)
 
 class Key(Platform):
@@ -396,11 +419,20 @@ class CollisionManager:
             transitionRect = transition.getRect()
             if playerRect.colliderect(transitionRect):
                 try:
-                    transition.trigger(player, gameManager)
+                    transition.trigger(gameManager)
                 except:
                     print("Transition Failed To Trigger")
                     continue
 
+    def checkEnemyCollisions(self, player, enemies):
+        playerRect = player.getRect()
+        for enemy in enemies:
+            enemyRect = py.Rect(enemy.position[0] - enemy.width/2, enemy.position[1] - enemy.height/2, enemy.width, enemy.height)
+            if playerRect.colliderect(enemyRect):
+                pass
+
+
+            
 # Create game objects
 mainCharacter = Player()
 gameManager = GameManager(mainCharacter)
