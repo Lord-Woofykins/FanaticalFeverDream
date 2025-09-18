@@ -26,7 +26,8 @@ class Player:
 
         self.onGround = False
 
-        self.health = 100
+        self.maxHealth = 100
+        self.health = self.maxHealth
 
     def movePlayer(self, xAcceleration):
         self.xVelocity += xAcceleration

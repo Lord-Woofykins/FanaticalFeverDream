@@ -5,11 +5,9 @@ import pygame as py
 from Player import Player
 from Room import Room
 from Camera import Camera
+from uiManager import uiManager
 from CollisionManager import CollisionManager
 from GameManager import GameManager
-
-# Import dictionaries
-from ColourPalettes import themeColourPalettes
 
 py.init() # Initialize Pygame Modules
 
@@ -28,6 +26,7 @@ mainCharacter = Player()
 camera = Camera()
 
 # Create managers
+uiManager = uiManager()
 collisionManager = CollisionManager()
 gameManager = GameManager(mainCharacter, 60)
 
@@ -96,6 +95,7 @@ while running:
     # Draw game for player
     room.draw(camera, screen)
     mainCharacter.draw(camera)
+    uiManager.drawHealthBar(screen, 10, 10, 100, 40, mainCharacter.health, mainCharacter.maxHealth)
 
     # Update and draw enemies
     for enemy in room.enemies:

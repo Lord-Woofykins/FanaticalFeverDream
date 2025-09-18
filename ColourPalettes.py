@@ -1,4 +1,9 @@
 themeColourPalettes = {
+    "UI": {
+        "healthBarBackground": (50, 50, 50),
+        "healthBarForeground": (200, 0, 0),
+        "healthBarBorder": (255, 255, 255),
+    },
     "Forest": {
         "background": (34, 139, 34),
         "platform": (139, 69, 19),

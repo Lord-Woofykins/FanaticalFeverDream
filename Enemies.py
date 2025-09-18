@@ -1,21 +1,22 @@
 import pygame as py
 
 class Enemy:
-    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange):
+    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, damage=10):
         self.position = [xPosition, yPosition]
         self.width = width
         self.height = height
         self.speed = speed
         self.direction = direction # 1 is right, -1 is left
         self.patrolRange = patrolRange
+        self.damage = damage
     
     def getRect(self):
         return py.Rect(self.position[0], self.position[1] - (self.height-50), self.width, self.height)
 
     
 class GroundEnemy(Enemy):
-    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, colour):
-        super().__init__(xPosition, yPosition, width, height, speed, direction, patrolRange)
+    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, damage, colour):
+        super().__init__(xPosition, yPosition, width, height, speed, direction, patrolRange, damage)
         self.xInitial = xPosition
         self.colour = colour
 
@@ -30,8 +31,8 @@ class GroundEnemy(Enemy):
         py.draw.rect(py.display.get_surface(), self.colour, screenRect)
 
 class FlyingEnemy(Enemy):
-    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, colour):
-        super().__init__(xPosition, yPosition, width, height, speed, direction, patrolRange)
+    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, damage, colour):
+        super().__init__(xPosition, yPosition, width, height, speed, direction, damage, patrolRange)
         self.xInitial = xPosition
         self.colour = colour
 
@@ -45,8 +46,8 @@ class FlyingEnemy(Enemy):
         py.draw.rect(py.display.get_surface(), self.colour, enemyRect)
 
 class DemonEnemy(Enemy):
-    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, colour):
-        super().__init__(xPosition, yPosition, width, height, speed, direction, patrolRange)
+    def __init__(self, xPosition, yPosition, width, height, speed, direction, patrolRange, damage, colour):
+        super().__init__(xPosition, yPosition, width, height, speed, direction, damage, patrolRange)
         self.xInitial = xPosition
         self.colour = colour
 

@@ -73,4 +73,4 @@ class CollisionManager:
         for enemy in enemies:
             enemyRect = py.Rect(enemy.position[0] - enemy.width/2, enemy.position[1] - enemy.height/2, enemy.width, enemy.height)
             if playerRect.colliderect(enemyRect):
-                pass
+                player.loseHealth(enemy.damage)

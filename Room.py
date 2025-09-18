@@ -57,7 +57,7 @@ class Room:
                         direction = 1
                     elif cellVal - 20 == 2:
                         direction = -1
-                    enemyObj = GroundEnemy(x*50, y*50, 40, 60, 2, direction, 4*50, themeColourPalettes[self.theme]["groundEnemy"]) # xPos, yPos, width, height, speed, direction, patrolRange
+                    enemyObj = GroundEnemy(x*50, y*50, 40, 60, 2, direction, 4*50, 10, themeColourPalettes[self.theme]["groundEnemy"]) # xPos, yPos, width, height, speed, direction, patrolRange, damage, colour
                     self.enemies.append(enemyObj)
 
 
