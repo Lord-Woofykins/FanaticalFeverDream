@@ -3,7 +3,7 @@ import sys
 from ColourPalettes import themeColourPalettes
 
 class TitleScreen:
-    def __init__(self):
+    def __init__(self, saveManager=None):
         self.antialiasing = False
 
         # Store a local reference to colours for easy access
@@ -38,13 +38,21 @@ class TitleScreen:
             "selectArrow": self.selectArrow
         }
 
-        self.selectedOption = 0 # 0 for new game, 1 for continue
+        self.selectedOption = 0 # 0 for new game, 1 for continue, etc.
+        self.saveManager = saveManager
 
         self.clock = py.time.Clock()
 
     def display(self):
         screen = py.display.get_surface()
         screen.fill(self.black)
+
+        # Draw text arrow based on selected option
+        arrowOptions = ["newGameText", "continueText"]
+        selectedOption = arrowOptions[self.selectedOption]
+        selectedX, selectedY = self.textRectCoords[selectedOption]
+        self.textRectCoords["selectArrow"] = (selectedX - 200, selectedY)
+
 
         for element in self.textRectCoords:
             elementX, elementY = self.textRectCoords[element]
@@ -66,6 +74,17 @@ class TitleScreen:
                         py.quit()
                         sys.exit()
                     if event.key == py.K_RETURN:
+                        if self.selectedOption == 1:
+                            try:
+                                self.saveManager.loadGame()
+                            except FileNotFoundError:
+                                print("No save file found, starting new game")
+                            except Exception as e:
+                                print(f"Error loading save file: {e}")
                         running = False
+                    if event.key == py.K_UP:
+                        self.selectedOption = max(0, self.selectedOption - 1)
+                    elif event.key == py.K_DOWN:
+                        self.selectedOption = min(1, self.selectedOption + 1)
             self.display()
             self.clock.tick(60)
