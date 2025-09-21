@@ -67,7 +67,15 @@ class Player:
         screen = py.display.get_surface()
         py.draw.rect(screen, GREEN, screenRect)
     
-    def loseHealth(self, damage):
+    def loseHealth(self, damage, gameManager):
         self.health -= damage
         if self.health <= 0:
-            pass
+            gameManager.restart()
+    
+    def reset(self):
+        self.position = startingPosition.copy()
+        self.health = self.maxHealth
+        self.yVelocity = 0
+        self.xVelocity = 0
+        self.onGround = False
+        self.stand()

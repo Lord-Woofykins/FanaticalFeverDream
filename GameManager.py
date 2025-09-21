@@ -4,9 +4,10 @@ from Room import Room
 WIDTH, HEIGHT = 1100, 800
 
 class GameManager:
-    def __init__(self, player, frametime):
+    def __init__(self, player, frametime, camera):
         self.currentRoom = None
         self.player = player
+        self.camera = camera
         self.frametime = frametime
         
     def changeRoom(self, futureRoom, playerX, playerY, camera):
@@ -68,3 +69,7 @@ class GameManager:
                     py.quit()
                     sys.exit()
             clock.tick(self.frametime)
+    
+    def restart(self):
+        self.changeRoom("cell", 100, 800, self.camera)
+        self.player.reset()

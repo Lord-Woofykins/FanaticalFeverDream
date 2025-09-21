@@ -5,6 +5,7 @@ import pygame as py
 from Player import Player
 from Room import Room
 from Camera import Camera
+from TitleScreen import TitleScreen
 from uiManager import uiManager
 from CollisionManager import CollisionManager
 from GameManager import GameManager
@@ -21,6 +22,9 @@ py.mouse.set_visible(False)
 screen = py.display.get_surface()
 clock = py.time.Clock()
 
+titleScreen = TitleScreen()
+titleScreen.run()
+
 # Create game objects
 mainCharacter = Player()
 camera = Camera()
@@ -28,7 +32,7 @@ camera = Camera()
 # Create managers
 uiManager = uiManager()
 collisionManager = CollisionManager()
-gameManager = GameManager(mainCharacter, 60)
+gameManager = GameManager(mainCharacter, 60, camera)
 
 # Initialize the first room
 gameManager.currentRoom = Room()
@@ -101,7 +105,7 @@ while running:
     for enemy in room.enemies:
         enemy.patrol()
         enemy.draw(camera)
-        collisionManager.checkEnemyCollisions(mainCharacter, room.enemies)
+        collisionManager.checkEnemyCollisions(mainCharacter, room.enemies, gameManager)
 
     # Update the display
     py.display.flip()

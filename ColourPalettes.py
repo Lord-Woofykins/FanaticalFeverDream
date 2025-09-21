@@ -1,4 +1,13 @@
 themeColourPalettes = {
+    "CorePalette": {
+        "white": (255, 255, 255),
+        "black": (0, 0, 0),
+        "red": (255, 0, 0),
+        "green": (0, 255, 0),
+        "blue": (0, 0, 255),
+        "yellow": (255, 255, 0),
+        "grey": (128, 128, 128),
+    },
     "UI": {
         "healthBarBackground": (50, 50, 50),
         "healthBarForeground": (200, 0, 0),

@@ -68,9 +68,9 @@ class CollisionManager:
                     print("Transition Failed To Trigger")
                     continue
 
-    def checkEnemyCollisions(self, player, enemies):
+    def checkEnemyCollisions(self, player, enemies, gameManager):
         playerRect = player.getRect()
         for enemy in enemies:
             enemyRect = py.Rect(enemy.position[0] - enemy.width/2, enemy.position[1] - enemy.height/2, enemy.width, enemy.height)
             if playerRect.colliderect(enemyRect):
-                player.loseHealth(enemy.damage)
+                player.loseHealth(enemy.damage, gameManager)
