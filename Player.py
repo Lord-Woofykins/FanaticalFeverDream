@@ -64,10 +64,11 @@ class Player:
         if self.onGround:  # Only jump if on ground
             self.yVelocity = -self.jumpforce
 
-    def attack(self):
+    def attack(self, collisionManagerCallback):
         if self.checkAttackCooldown() == False:
             self.lastAttackTime = py.time.get_ticks()
             self.isAttacking = True
+            collisionManagerCallback(self.getAttackRect())
 
     def updateGravity(self):
         self.yVelocity += GRAVITY
@@ -75,6 +76,16 @@ class Player:
     def getRect(self):
         # Finding the top left corner from centre position
         return py.Rect(self.position[0] - self.width/2, self.position[1] - self.height/2, self.width, self.height)
+    
+    def getAttackRect(self):
+        attackHeight = self.height // 2
+        attackOffset = self.width // 2
+        return py.Rect(
+            self.position[0] + attackOffset * self.direction - (self.attackRange if self.direction == -1 else 0),
+            self.position[1] - attackHeight,
+            self.attackRange,
+            self.height
+        )
 
     def draw(self, camera):
         # Create a rect for the player in world coordinates
@@ -87,14 +98,8 @@ class Player:
         if self.isAttacking:
             currentTime = py.time.get_ticks()
             if currentTime - self.lastAttackTime < self.attackDisplayTime:
-                attackHeight = self.height // 2
-                attackOffset = self.width // 2
-                attackRect = py.Rect(
-                    self.position[0] + attackOffset * self.direction - (self.attackRange if self.direction == -1 else 0),
-                    self.position[1] - attackHeight,
-                    self.attackRange,
-                    self.height        
-                )
+                # Draw attack rect to visualise attack
+                attackRect = self.getAttackRect()
                 screenRect = camera.applyRect(attackRect)
                 py.draw.rect(screen, (255, 0, 0), screenRect, 2)
             else:

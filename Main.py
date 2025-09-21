@@ -30,16 +30,17 @@ camera = Camera()
 mainCharacter = Player(camera)
 
 
-# Create managers
-uiManager = uiManager()
-collisionManager = CollisionManager()
+# Create gameManagers
 gameManager = GameManager(mainCharacter, 60, camera)
 
 # Initialize the first room
 gameManager.currentRoom = Room()
 gameManager.currentRoom.loadRoom() # load room from game manager
-
 room = gameManager.currentRoom
+
+# Create other managers
+uiManager = uiManager()
+collisionManager = CollisionManager(room)
 
 
 """Main game loop"""
@@ -62,7 +63,7 @@ while running:
             if event.key == py.K_w or event.key == py.K_UP:
                 mainCharacter.jump()
             if event.key == py.K_j or event.key == py.K_z:
-                mainCharacter.attack()
+                mainCharacter.attack(collisionManager.checkEnemyHits)
         if event.type == py.KEYUP:
             if event.key == py.K_s or event.key == py.K_DOWN:
                 mainCharacter.stand()

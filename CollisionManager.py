@@ -1,5 +1,8 @@
 import pygame as py
 class CollisionManager:
+    def __init__(self, room):
+        self.room = room
+
     def handleCollisions(self, player, room):
         # Apply vertical movement first
         player.position[1] += player.yVelocity
@@ -71,6 +74,10 @@ class CollisionManager:
     def checkEnemyCollisions(self, player, enemies, gameManager):
         playerRect = player.getRect()
         for enemy in enemies:
-            enemyRect = py.Rect(enemy.position[0] - enemy.width/2, enemy.position[1] - enemy.height/2, enemy.width, enemy.height)
-            if playerRect.colliderect(enemyRect):
+            if playerRect.colliderect(enemy.getRect()):
                 player.loseHealth(enemy.damage, gameManager)
+    
+    def checkEnemyHits(self, attackRect):
+        for enemy in self.room.enemies:
+            if attackRect.colliderect(enemy.getRect()):
+                pass
