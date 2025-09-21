@@ -1,4 +1,5 @@
 import pygame as py
+import os
 startingPosition = [100, 800]
 GRAVITY = 0.5
 GREEN = (0, 128, 0)
@@ -39,6 +40,27 @@ class Player:
 
         self.maxHealth = 100
         self.health = self.maxHealth
+
+        self.spriteAnimations = {}
+        spriteFolders = ["Attack_1", "Attack_2", "Charge", "Dead", "Fireball", "Flamejet", "Hurt", "Idle", "Jump", "Run", "Walk"]
+        basePath = os.path.join(os.path.dirname(__file__), "Fire Wizard")
+
+        for spriteType in spriteFolders:
+            # Find the path to the spriteFolder/Type
+            folderPath = os.path.join(basePath, spriteType)
+            frames = []
+
+            # Assign each sprite as a frame (sorted to ensure they are in order)
+            for filename in sorted(os.listdir(folderPath)):
+                framePath = os.path.join(folderPath, filename)
+                frame = py.image.load(framePath).convert_alpha()
+                frames.append(frame)
+
+            self.spriteAnimations[spriteType] = frames
+
+
+        self.animationStatus = "idle"
+        self.animationState = 0
 
     def movePlayer(self, xAcceleration):
         self.xVelocity += xAcceleration
