@@ -5,3 +5,4 @@ __pycache__/
 # ignore ide files
 .vscode/
 .idea
+RoguelikeShapeshifter.code-workspace

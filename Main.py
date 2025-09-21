@@ -101,6 +101,7 @@ while running:
     
     # Draw game for player
     room.draw(camera, screen)
+    mainCharacter.updateAnimation()
     mainCharacter.draw(camera)
     uiManager.drawHealthBar(screen, 10, 10, 100, 40, mainCharacter.health, mainCharacter.maxHealth)
 

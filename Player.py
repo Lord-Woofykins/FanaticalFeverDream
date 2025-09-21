@@ -59,8 +59,24 @@ class Player:
             self.spriteAnimations[spriteType] = frames
 
 
+        self.animationMap = {
+            "idle": "Idle",
+            "run": "Run",
+            "walk": "Walk",
+            "crouch": "Crouch",
+            "jump": "Jump",
+            "attack": "Attack_1",
+            "hurt": "Hurt",
+            "dead": "Dead",
+            "fire": "Fireball"
+        }
+        
         self.animationStatus = "idle"
-        self.animationState = 0
+        self.animationKey = self.animationMap.get(self.animationStatus)
+        self.frameIndex = 0
+        self.frameDuration = 100
+        self.previousFrameTime = 0
+        self.loopAnimation = True
 
     def movePlayer(self, xAcceleration):
         self.xVelocity += xAcceleration
@@ -69,13 +85,16 @@ class Player:
         if xAcceleration == 0:
             if self.xVelocity > 0:
                 self.xVelocity = max(0, self.xVelocity - self.deceleration)
+                self.setAnimation("run")
             elif self.xVelocity < 0:
                 self.xVelocity = min(0, self.xVelocity + self.deceleration)
+                self.setAnimation("run")
 
     def crouch(self):
         self.height = self.crouchHeight
         self.position[1] += self.height / 2 # Adjusting position to stay grounded
         self.maxSpeed = self.crouchSpeed
+        self.setAnimation("crouch")
         
     def stand(self):
         self.height = self.standHeight
@@ -85,12 +104,14 @@ class Player:
     def jump(self):
         if self.onGround:  # Only jump if on ground
             self.yVelocity = -self.jumpforce
+            self.setAnimation("jump")
 
     def attack(self, collisionManagerCallback):
         if self.checkAttackCooldown() == False:
             self.lastAttackTime = py.time.get_ticks()
             self.isAttacking = True
             collisionManagerCallback(self.getAttackRect())
+            self.setAnimation("attack")
 
     def updateGravity(self):
         self.yVelocity += GRAVITY
@@ -108,6 +129,35 @@ class Player:
             self.attackRange,
             self.height
         )
+    
+    def setAnimation(self, status):
+        futureKey = self.animationMap.get(status)
+        if futureKey != self.animationKey:
+            self.animationKey = futureKey
+            # Reset frame values for new animation
+            self.frameIndex = 0
+            self.previousFrameTime = py.time.get_ticks()
+            self.animationStatus = status
+
+    def updateAnimation(self):
+        frames = self.spriteAnimations.get(self.animationKey)
+        if not frames:
+            print("An error occurred retrieving animation")
+            return
+        
+        # Determining whether enough time has passed for another frame
+        currentTime = py.time.get_ticks()
+        if currentTime - self.previousFrameTime >= self.frameDuration:
+            self.previousFrameTime = currentTime
+            self.frameIndex += 1
+            # Determine whether this animation should be looped
+            if self.frameIndex >= len(frames):
+                if self.loopAnimation:
+                    self.frameIndex = 0 # Restart animation
+                else:
+                    self.frameIndex = len(frames) - 1 # Keeping animation on final frame
+
+
 
     def draw(self, camera):
         # Create a rect for the player in world coordinates
@@ -115,7 +165,16 @@ class Player:
         # Apply camera offset and zoom to the entire rectangle
         screenRect = camera.applyRect(playerRect)
         screen = py.display.get_surface()
-        py.draw.rect(screen, GREEN, screenRect)
+
+        frames = self.spriteAnimations.get(self.animationKey)
+        if frames:
+            frame = frames[self.frameIndex]
+            frameSurface = py.transform.scale(frame, (int(self.width), int(self.height)))
+            if self.direction == -1:
+                frameSurface = py.transform.flip(frame, True, False)
+            screen.blit(frameSurface, (screenRect.x, screenRect.y))
+        else:
+            py.draw.rect(screen, GREEN, screenRect) # Default rect to serve as redundancy
         # Draw attack rect if attacking
         if self.isAttacking:
             currentTime = py.time.get_ticks()
@@ -130,6 +189,7 @@ class Player:
     def loseHealth(self, damage, gameManager):
         self.health -= damage
         if self.health <= 0:
+            self.setAnimation("death")
             gameManager.restart()
     
     def checkAttackCooldown(self):
