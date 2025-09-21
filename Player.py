@@ -5,7 +5,9 @@ GREEN = (0, 128, 0)
 
 
 class Player:
-    def __init__(self, width=40, height=70):
+    def __init__(self, camera, width=40, height=70):
+        self.camera = camera
+
         self.position = startingPosition.copy()
         self.width = width
         self.height = height
@@ -21,10 +23,19 @@ class Player:
         self.xVelocity = 0
         self.acceleration = 1
         self.deceleration = 2
+        self.direction = 1
 
         self.jumpforce = 10.5
-
         self.onGround = False
+
+        # Times in milliseconds
+        self.attackCooldown = 500
+        self.lastAttackTime = 0
+        self.attackDisplayTime = 100
+        self.isAttacking = False
+
+        self.attackDamage = 20
+        self.attackRange = 50
 
         self.maxHealth = 100
         self.health = self.maxHealth
@@ -38,7 +49,7 @@ class Player:
                 self.xVelocity = max(0, self.xVelocity - self.deceleration)
             elif self.xVelocity < 0:
                 self.xVelocity = min(0, self.xVelocity + self.deceleration)
-    
+
     def crouch(self):
         self.height = self.crouchHeight
         self.position[1] += self.height / 2 # Adjusting position to stay grounded
@@ -53,10 +64,16 @@ class Player:
         if self.onGround:  # Only jump if on ground
             self.yVelocity = -self.jumpforce
 
+    def attack(self):
+        if self.checkAttackCooldown() == False:
+            self.lastAttackTime = py.time.get_ticks()
+            self.isAttacking = True
+
     def updateGravity(self):
         self.yVelocity += GRAVITY
 
     def getRect(self):
+        # Finding the top left corner from centre position
         return py.Rect(self.position[0] - self.width/2, self.position[1] - self.height/2, self.width, self.height)
 
     def draw(self, camera):
@@ -66,11 +83,36 @@ class Player:
         screenRect = camera.applyRect(playerRect)
         screen = py.display.get_surface()
         py.draw.rect(screen, GREEN, screenRect)
-    
+        # Draw attack rect if attacking
+        if self.isAttacking:
+            currentTime = py.time.get_ticks()
+            if currentTime - self.lastAttackTime < self.attackDisplayTime:
+                attackHeight = self.height // 2
+                attackOffset = self.width // 2
+                attackRect = py.Rect(
+                    self.position[0] + attackOffset * self.direction - (self.attackRange if self.direction == -1 else 0),
+                    self.position[1] - attackHeight,
+                    self.attackRange,
+                    self.height        
+                )
+                screenRect = camera.applyRect(attackRect)
+                py.draw.rect(screen, (255, 0, 0), screenRect, 2)
+            else:
+                self.isAttacking = False
+
     def loseHealth(self, damage, gameManager):
         self.health -= damage
         if self.health <= 0:
             gameManager.restart()
+    
+    def checkAttackCooldown(self):
+        # Compare current time to last attack time
+        currentTime = py.time.get_ticks()
+        if currentTime - self.lastAttackTime > self.attackCooldown:
+            self.lastAttackTime = py.time.get_ticks()
+            return False
+        else:
+            return True
     
     def reset(self):
         self.position = startingPosition.copy()

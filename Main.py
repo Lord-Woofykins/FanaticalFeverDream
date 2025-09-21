@@ -26,8 +26,9 @@ titleScreen = TitleScreen()
 titleScreen.run()
 
 # Create game objects
-mainCharacter = Player()
 camera = Camera()
+mainCharacter = Player(camera)
+
 
 # Create managers
 uiManager = uiManager()
@@ -39,6 +40,7 @@ gameManager.currentRoom = Room()
 gameManager.currentRoom.loadRoom() # load room from game manager
 
 room = gameManager.currentRoom
+
 
 """Main game loop"""
 running = True
@@ -55,18 +57,14 @@ while running:
             if event.key == py.K_ESCAPE:
                 running = False
         # Movement events
-            if event.key == py.K_s:
+            if event.key == py.K_s or event.key == py.K_DOWN:
                 mainCharacter.crouch()
-            if event.key == py.K_DOWN:
-                mainCharacter.crouch()
-            if event.key == py.K_w:
+            if event.key == py.K_w or event.key == py.K_UP:
                 mainCharacter.jump()
-            if event.key == py.K_UP:
-                mainCharacter.jump()
+            if event.key == py.K_j or event.key == py.K_z:
+                mainCharacter.attack()
         if event.type == py.KEYUP:
-            if event.key == py.K_s:
-                mainCharacter.stand()
-            if event.key == py.K_DOWN:
+            if event.key == py.K_s or event.key == py.K_DOWN:
                 mainCharacter.stand()
     
     # Handle continuous input
@@ -74,13 +72,17 @@ while running:
     if keys[py.K_a] or keys[py.K_d]:
         if keys[py.K_a]:
             mainCharacter.movePlayer(-mainCharacter.acceleration)
+            mainCharacter.direction = -1
         elif keys[py.K_d]:
             mainCharacter.movePlayer(mainCharacter.acceleration)
+            mainCharacter.direction = 1
     elif keys[py.K_LEFT] or keys[py.K_RIGHT]:
         if keys[py.K_LEFT]:
             mainCharacter.movePlayer(-mainCharacter.acceleration)
+            mainCharacter.direction = -1
         elif keys[py.K_RIGHT]:
             mainCharacter.movePlayer(mainCharacter.acceleration)
+            mainCharacter.direction = 1
     else:
             mainCharacter.movePlayer(0)  # Stop horizontal movement if no input
 
@@ -93,8 +95,8 @@ while running:
     
     # Update camera to follow player
     camera.follow(room, mainCharacter.position[0], mainCharacter.position[1])
-    print(f"Camera Position: ({camera.x:.2f}, {camera.y:.2f})")
-    print(f"Player Position: ({mainCharacter.position[0]:.2f}, {mainCharacter.position[1]:.2f})")
+    #print(f"Camera Position: ({camera.x:.2f}, {camera.y:.2f})")
+    #print(f"Player Position: ({mainCharacter.position[0]:.2f}, {mainCharacter.position[1]:.2f})")
     
     # Draw game for player
     room.draw(camera, screen)

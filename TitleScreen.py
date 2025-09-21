@@ -82,9 +82,9 @@ class TitleScreen:
                             except Exception as e:
                                 print(f"Error loading save file: {e}")
                         running = False
-                    if event.key == py.K_UP:
+                    if event.key == py.K_UP or event.key == py.K_w:
                         self.selectedOption = max(0, self.selectedOption - 1)
-                    elif event.key == py.K_DOWN:
+                    elif event.key == py.K_DOWN or event.key == py.K_s:
                         self.selectedOption = min(1, self.selectedOption + 1)
             self.display()
             self.clock.tick(60)

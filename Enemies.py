@@ -11,7 +11,7 @@ class Enemy:
         self.damage = damage
     
     def getRect(self):
-        return py.Rect(self.position[0], self.position[1] - (self.height-50), self.width, self.height)
+        return py.Rect(self.position[0] - self.width//2, self.position[1] - (self.height-50), self.width, self.height)
 
     
 class GroundEnemy(Enemy):
