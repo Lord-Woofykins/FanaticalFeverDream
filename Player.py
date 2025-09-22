@@ -2,11 +2,10 @@ import pygame as py
 import os
 startingPosition = [100, 800]
 GRAVITY = 0.5
-GREEN = (0, 128, 0)
 
 
 class Player:
-    def __init__(self, camera, width=40, height=70):
+    def __init__(self, camera, width=40, height=64):
         self.camera = camera
 
         self.position = startingPosition.copy()
@@ -26,7 +25,7 @@ class Player:
         self.deceleration = 2
         self.direction = 1
 
-        self.jumpforce = 10.5
+        self.jumpForce = 10.5
         self.onGround = False
 
         # Times in milliseconds
@@ -42,7 +41,7 @@ class Player:
         self.health = self.maxHealth
 
         self.spriteAnimations = {}
-        spriteFolders = ["Attack_1", "Attack_2", "Charge", "Dead", "Fireball", "Flamejet", "Hurt", "Idle", "Jump", "Run", "Walk"]
+        spriteFolders = ["Attack_1", "Attack_2", "Charge", "Crouch", "Dead", "Fireball", "Flamejet", "Hurt", "Idle", "Jump", "Run", "Walk"]
         basePath = os.path.join(os.path.dirname(__file__), "Fire Wizard")
 
         for spriteType in spriteFolders:
@@ -51,13 +50,14 @@ class Player:
             frames = []
 
             # Assign each sprite as a frame (sorted to ensure they are in order)
-            for filename in sorted(os.listdir(folderPath)):
-                framePath = os.path.join(folderPath, filename)
-                frame = py.image.load(framePath).convert_alpha()
-                frames.append(frame)
+            if os.path.exists(folderPath):
+                for filename in sorted(os.listdir(folderPath)):
+                    framePath = os.path.join(folderPath, filename)
+                    if os.path.isfile(framePath) and filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        frame = py.image.load(framePath).convert_alpha()
+                        frames.append(frame)
 
             self.spriteAnimations[spriteType] = frames
-
 
         self.animationMap = {
             "idle": "Idle",
@@ -103,7 +103,7 @@ class Player:
         
     def jump(self):
         if self.onGround:  # Only jump if on ground
-            self.yVelocity = -self.jumpforce
+            self.yVelocity = -self.jumpForce
             self.setAnimation("jump")
 
     def attack(self, collisionManagerCallback):
@@ -157,8 +157,6 @@ class Player:
                 else:
                     self.frameIndex = len(frames) - 1 # Keeping animation on final frame
 
-
-
     def draw(self, camera):
         # Create a rect for the player in world coordinates
         playerRect = self.getRect()
@@ -166,15 +164,35 @@ class Player:
         screenRect = camera.applyRect(playerRect)
         screen = py.display.get_surface()
 
+        # Hitbox code for testing
+        # py.draw.rect(screen, (0, 0, 0), screenRect)
+        
+
+        # Draw sprite on top of the rectangle
         frames = self.spriteAnimations.get(self.animationKey)
         if frames:
             frame = frames[self.frameIndex]
-            frameSurface = py.transform.scale(frame, (int(self.width), int(self.height)))
+            
+            # Scale sprite maintaining its natural aspect ratio
+            originalWidth = frame.get_width()
+            originalHeight = frame.get_height()
+            
+            # Scale based on height to match player height, maintaining aspect ratio
+            scaleRatio = (self.height * 3) / originalHeight
+            scaledWidth = int(originalWidth * scaleRatio)
+            scaledHeight = int(originalHeight * scaleRatio)
+            
+            frameSurface = py.transform.scale(frame, (scaledWidth, scaledHeight))
+            
             if self.direction == -1:
-                frameSurface = py.transform.flip(frame, True, False)
-            screen.blit(frameSurface, (screenRect.x, screenRect.y))
-        else:
-            py.draw.rect(screen, GREEN, screenRect) # Default rect to serve as redundancy
+                frameSurface = py.transform.flip(frameSurface, True, False)
+            
+            # Position sprite: center horizontally, align bottom with player rect
+            spriteX = screenRect.centerx - scaledWidth // 2
+            spriteY = screenRect.bottom - scaledHeight
+            
+            screen.blit(frameSurface, (spriteX, spriteY))
+
         # Draw attack rect if attacking
         if self.isAttacking:
             currentTime = py.time.get_ticks()
@@ -189,7 +207,7 @@ class Player:
     def loseHealth(self, damage, gameManager):
         self.health -= damage
         if self.health <= 0:
-            self.setAnimation("death")
+            self.setAnimation("dead")
             gameManager.restart()
     
     def checkAttackCooldown(self):
