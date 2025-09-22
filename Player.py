@@ -14,6 +14,7 @@ class Player:
 
         self.standHeight = height
         self.crouchHeight = min(50, height/2) # Dynamic height adjustment for changing later
+        self.isCrouching = False  # Track crouching state
 
         self.maxSpeed = 8
         self.standSpeed = 8
@@ -71,6 +72,9 @@ class Player:
             "fire": "Fireball"
         }
         
+        # Define which animations should not loop
+        self.nonLoopingAnimations = {"attack", "hurt", "dead", "fire", "jump"}
+        
         self.animationStatus = "idle"
         self.animationKey = self.animationMap.get(self.animationStatus)
         self.frameIndex = 0
@@ -80,26 +84,58 @@ class Player:
 
     def movePlayer(self, xAcceleration):
         self.xVelocity += xAcceleration
-        self.xVelocity = max(-self.maxSpeed, min(self.xVelocity, self.maxSpeed)) # Limit horizontal speed by: max(absolute minimum, actual speed capped at maximum)-> restricted velocity
+        self.xVelocity = max(-self.maxSpeed, min(self.xVelocity, self.maxSpeed))  # Clamp speed
 
-        if xAcceleration == 0:
+        # Set direction based on movement
+        if xAcceleration > 0:
+            self.direction = 1
+        elif xAcceleration < 0:
+            self.direction = -1
+
+        # Handle animation based on current state priorities
+        if self.isCrouching:
+            if xAcceleration != 0:
+                # Allow crawling while crouched
+                self.setAnimation("crouch")
+            else:
+                # Decelerate to stop when crouched but no input
+                if self.xVelocity > 0:
+                    self.xVelocity = max(0, self.xVelocity - self.deceleration)
+                elif self.xVelocity < 0:
+                    self.xVelocity = min(0, self.xVelocity + self.deceleration)
+
+                if abs(self.xVelocity) < 0.1:
+                    self.xVelocity = 0
+                self.setAnimation("crouch")  # Stay crouched even when idle
+        elif not self.onGround:
+            self.setAnimation("jump")
+        elif xAcceleration != 0:
+            self.setAnimation("run")
+        else:
             if self.xVelocity > 0:
                 self.xVelocity = max(0, self.xVelocity - self.deceleration)
-                self.setAnimation("run")
             elif self.xVelocity < 0:
                 self.xVelocity = min(0, self.xVelocity + self.deceleration)
-                self.setAnimation("run")
+
+            if abs(self.xVelocity) < 0.1:
+                self.xVelocity = 0
+                if self.onGround:
+                    self.setAnimation("idle")
 
     def crouch(self):
-        self.height = self.crouchHeight
-        self.position[1] += self.height / 2 # Adjusting position to stay grounded
-        self.maxSpeed = self.crouchSpeed
-        self.setAnimation("crouch")
+        if not self.isCrouching:  # Only crouch if not already crouching
+            self.height = self.crouchHeight
+            self.position[1] += (self.standHeight - self.crouchHeight) / 2 # Adjusting position to stay grounded
+            self.maxSpeed = self.crouchSpeed
+            self.isCrouching = True
+        self.setAnimation("crouch")  # Always set crouch animation when crouch is called
         
     def stand(self):
-        self.height = self.standHeight
-        self.position[1] -= self.crouchHeight / 2 # Adjusting position to normal height
-        self.maxSpeed = self.standSpeed
+        if self.isCrouching:  # Only stand if currently crouching
+            self.height = self.standHeight
+            self.position[1] -= (self.standHeight - self.crouchHeight) / 2 # Adjusting position to normal height
+            self.maxSpeed = self.standSpeed
+            self.isCrouching = False
         
     def jump(self):
         if self.onGround:  # Only jump if on ground
@@ -131,6 +167,14 @@ class Player:
         )
     
     def setAnimation(self, status):
+        # Don't change animation if we're in a higher priority non-looping animation that hasn't finished
+        if not self.loopAnimation and self.animationStatus in self.nonLoopingAnimations:
+            frames = self.spriteAnimations.get(self.animationKey)
+            if frames and self.frameIndex < len(frames) - 1:
+                # Animation is still playing, don't change it unless it's the same type or higher priority
+                if status not in ["dead", "hurt"]:  # Only death and hurt can interrupt other non-looping animations
+                    return
+
         futureKey = self.animationMap.get(status)
         if futureKey != self.animationKey:
             self.animationKey = futureKey
@@ -138,6 +182,8 @@ class Player:
             self.frameIndex = 0
             self.previousFrameTime = py.time.get_ticks()
             self.animationStatus = status
+            # Set loop status based on animation type
+            self.loopAnimation = status not in self.nonLoopingAnimations
 
     def updateAnimation(self):
         frames = self.spriteAnimations.get(self.animationKey)
@@ -177,8 +223,9 @@ class Player:
             originalWidth = frame.get_width()
             originalHeight = frame.get_height()
             
-            # Scale based on height to match player height, maintaining aspect ratio
-            scaleRatio = (self.height * 3) / originalHeight
+            # Use standHeight for sprite scaling to keep consistent size when crouching
+            spriteHeight = self.standHeight if self.isCrouching else self.height
+            scaleRatio = (spriteHeight * 3) / originalHeight
             scaledWidth = int(originalWidth * scaleRatio)
             scaledHeight = int(originalHeight * scaleRatio)
             
@@ -222,7 +269,9 @@ class Player:
     def reset(self):
         self.position = startingPosition.copy()
         self.health = self.maxHealth
+        self.height = 64
         self.yVelocity = 0
         self.xVelocity = 0
         self.onGround = False
+        self.isCrouching = False
         self.stand()
