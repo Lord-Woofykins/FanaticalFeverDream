@@ -104,6 +104,7 @@ while running:
     mainCharacter.updateAnimation()
     mainCharacter.draw(camera)
     uiManager.drawHealthBar(screen, 10, 10, 100, 40, mainCharacter.health, mainCharacter.maxHealth)
+    uiManager.drawScoreTracker(screen, 10, 20, 40, 40, currentScore=0)
 
     # Update and draw enemies
     for enemy in room.enemies:

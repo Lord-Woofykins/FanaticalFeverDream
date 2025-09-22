@@ -92,26 +92,8 @@ class Player:
         elif xAcceleration < 0:
             self.direction = -1
 
-        # Handle animation based on current state priorities
-        if self.isCrouching:
-            if xAcceleration != 0:
-                # Allow crawling while crouched
-                self.setAnimation("crouch")
-            else:
-                # Decelerate to stop when crouched but no input
-                if self.xVelocity > 0:
-                    self.xVelocity = max(0, self.xVelocity - self.deceleration)
-                elif self.xVelocity < 0:
-                    self.xVelocity = min(0, self.xVelocity + self.deceleration)
-
-                if abs(self.xVelocity) < 0.1:
-                    self.xVelocity = 0
-                self.setAnimation("crouch")  # Stay crouched even when idle
-        elif not self.onGround:
-            self.setAnimation("jump")
-        elif xAcceleration != 0:
-            self.setAnimation("run")
-        else:
+        # Apply deceleration when no input is given (regardless of ground state)
+        if xAcceleration == 0:
             if self.xVelocity > 0:
                 self.xVelocity = max(0, self.xVelocity - self.deceleration)
             elif self.xVelocity < 0:
@@ -119,8 +101,21 @@ class Player:
 
             if abs(self.xVelocity) < 0.1:
                 self.xVelocity = 0
-                if self.onGround:
-                    self.setAnimation("idle")
+
+        # Handle animation based on current state priorities
+        if self.isCrouching:
+            if xAcceleration != 0:
+                # Allow crawling while crouched
+                self.setAnimation("crouch")
+            else:
+                self.setAnimation("crouch")  # Stay crouched even when idle
+        elif not self.onGround:
+            self.setAnimation("jump")
+        elif xAcceleration != 0:
+            self.setAnimation("run")
+        else:
+            if self.onGround:
+                self.setAnimation("idle")
 
     def crouch(self):
         if not self.isCrouching:  # Only crouch if not already crouching

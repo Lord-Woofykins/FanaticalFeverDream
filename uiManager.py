@@ -13,6 +13,9 @@ class uiManager:
         py.draw.rect(surface, themeColourPalettes["UI"]["healthBarBorder"], (x, y, width, height), 2) # Border
     
     def drawScoreTracker(self, surface, x, y, width, height, currentScore):
-        py.draw.rect(surface, themeColourPalettes["CorePalette"]["black"], (x, y, width, height))
         self.scoreFont = py.font.Font("Jacquard12-Regular.ttf", 64)
-        self.scoreText = self.scoreFont.render()
+        self.scoreText = self.scoreFont.render(str(currentScore), False, themeColourPalettes["CorePalette"]["white"])
+        surface.blit(
+            self.scoreText,
+            py.draw.rect(surface, themeColourPalettes["CorePalette"]["black"], (x, y, width, height))
+        )

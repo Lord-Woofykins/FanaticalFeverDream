@@ -47,13 +47,13 @@ class TitleScreen:
         screen = py.display.get_surface()
         screen.fill(self.black)
 
-        # Draw text arrow based on selected option
+        # Find text arrow coordinates based on selected option
         arrowOptions = ["newGameText", "continueText"]
         selectedOption = arrowOptions[self.selectedOption]
         selectedX, selectedY = self.textRectCoords[selectedOption]
         self.textRectCoords["selectArrow"] = (selectedX - 200, selectedY)
 
-
+        # Draw title screen elements
         for element in self.textRectCoords:
             elementX, elementY = self.textRectCoords[element]
             surface = self.textSurfaces[element]
