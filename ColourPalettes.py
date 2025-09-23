@@ -9,9 +9,10 @@ themeColourPalettes = {
         "grey": (128, 128, 128),
     },
     "UI": {
-        "healthBarBackground": (50, 50, 50),
-        "healthBarForeground": (200, 0, 0),
-        "healthBarBorder": (255, 255, 255),
+        "background": (50, 50, 50),
+        "foreground": (200, 0, 0),
+        "border": (255, 255, 255),
+        "scoreColour": ((0, 255, 0))
     },
     "Forest": {
         "background": (34, 139, 34),

@@ -82,6 +82,8 @@ class Player:
         self.previousFrameTime = 0
         self.loopAnimation = True
 
+        self.currentScore = 0
+
     def movePlayer(self, xAcceleration):
         self.xVelocity += xAcceleration
         self.xVelocity = max(-self.maxSpeed, min(self.xVelocity, self.maxSpeed))  # Clamp speed

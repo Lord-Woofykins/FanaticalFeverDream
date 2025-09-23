@@ -4,7 +4,7 @@ from ColourPalettes import themeColourPalettes
 from RoomLayouts import rooms as roomLayouts
 
 class Room:
-    def __init__(self, currentRoom="cell", theme="Dungeon"):
+    def __init__(self, currentRoom="1_1", theme="Dungeon"):
         self.width = 1100
         self.height = 800
         self.currentRoom = currentRoom
@@ -17,13 +17,24 @@ class Room:
         self.transitions = []
         self.enemies = []
 
-        # Pulling Room Data from RoolLayouts
+        # Pulling Room Data from RoomLayouts
         self.triggers = roomLayouts.get(f"{currentRoom}Interactives", {})
         self.roomTransitions = roomLayouts.get(f"{currentRoom}Transitions", {})
+
+        self.roomConnections = {}
+        for key in roomLayouts:
+            if "Transitions" in key:
+                try:
+                    print(key)
+                    directions = list(roomLayouts[key].values())  # Get the direction values
+                    room = key.replace("Transitions", "")  # Extract room name (e.g., "1_1" from "1_1Transitions")
+                    self.roomConnections[room] = directions
+                except Exception as error:
+                    print(f"{key} failed to provide directions: {error}")
         
     def loadRoom(self):
         """Load the room layout and create platforms"""
-        # Clear Exxisting Room Data
+        # Clear Existing Room Data
         self.platforms = []
         self.interactives = []
         self.transitions = []
@@ -40,7 +51,9 @@ class Room:
 
                 # Creating and mapping transitions
                 transitionData = self.roomTransitions.get((x, y))   # Get transition data for this cell
-                if transitionData:                                  # Check if transitions exist
+                if transitionData:  
+                    break
+                    ### Convert direction to room
                     targetRoom, spawnX, spawnY = transitionData
                     transitionObj = Transition(xPos, yPos, rectWidth, rectHeight, "transition", targetRoom, spawnX, spawnY, self.theme)
                     self.transitions.append(transitionObj)
