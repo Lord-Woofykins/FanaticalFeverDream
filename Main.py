@@ -63,7 +63,7 @@ while running:
             if event.key == py.K_w or event.key == py.K_UP:
                 mainCharacter.jump()
             if event.key == py.K_j or event.key == py.K_z:
-                mainCharacter.attack(collisionManager.checkEnemyHits)
+                mainCharacter.attack(collisionManager.checkEnemyHits, room)
         if event.type == py.KEYUP:
             if event.key == py.K_s or event.key == py.K_DOWN:
                 mainCharacter.stand()

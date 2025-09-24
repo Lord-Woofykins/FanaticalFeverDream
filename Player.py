@@ -139,11 +139,11 @@ class Player:
             self.yVelocity = -self.jumpForce
             self.setAnimation("jump")
 
-    def attack(self, collisionManagerCallback):
+    def attack(self, collisionManagerCallback, room):
         if self.checkAttackCooldown() == False:
             self.lastAttackTime = py.time.get_ticks()
             self.isAttacking = True
-            collisionManagerCallback(self.getAttackRect())
+            collisionManagerCallback(self.getAttackRect(), room)
             self.setAnimation("attack")
 
     def updateGravity(self):

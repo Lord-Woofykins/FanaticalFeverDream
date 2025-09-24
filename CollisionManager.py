@@ -73,7 +73,10 @@ class CollisionManager:
             if playerRect.colliderect(enemy.getRect()):
                 player.loseHealth(enemy.damage, gameManager)
     
-    def checkEnemyHits(self, attackRect):
-        for enemy in self.room.enemies:
+    def checkEnemyHits(self, attackRect, room):
+        print("Scanning for enemies")
+        print(room.enemies)
+        for enemy in room.enemies:
             if attackRect.colliderect(enemy.getRect()):
-                pass
+                print(f"{enemy} hit! Attempting deletion")
+                room.enemies.remove(enemy)
