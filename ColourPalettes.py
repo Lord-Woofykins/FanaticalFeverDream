@@ -1,31 +1,30 @@
 themeColourPalettes = {
     "CorePalette": {
-        "white": (255, 255, 255),
-        "black": (0, 0, 0),
-        "red": (255, 0, 0),
-        "green": (0, 255, 0),
-        "blue": (0, 0, 255),
-        "yellow": (255, 255, 0),
-        "grey": (128, 128, 128),
+        "white": (220, 220, 220),
+        "black": (15, 15, 15),
+        "red": (180, 30, 30),
+        "green": (40, 120, 40),
+        "blue": (50, 80, 120),
+        "yellow": (180, 150, 50),
+        "grey": (80, 80, 80),
     },
     "UI": {
-        "background": (50, 50, 50),
-        "foreground": (200, 0, 0),
-        "border": (255, 255, 255),
-        "scoreColour": ((0, 255, 0))
-    },
-    "Forest": {
-        "background": (34, 139, 34),
-        "platform": (139, 69, 19),
-        "door": (164, 116, 73),
+        "background": (30, 30, 40),
+        "foreground": (200, 80, 50),
+        "border": (150, 150, 150),
+        "scoreColour": (120, 200, 120)
     },
     "Dungeon": {
-        "background": (100, 110, 120),
-        "platform": (100, 120, 140),
-        "closedDoor": (129,97,62),
-        "openDoor": (129,97,62, 50),
-        "key": (203,161,53),
-        "transition": (255, 50, 100),
-        "groundEnemy": (150, 0, 0),
+        "background": (40, 40, 50),
+        "platform": (60, 60, 70),
+
+        "closedDoor": (100, 80, 50),
+        "openDoor": (70, 55, 35),
+
+        "key": (190, 150, 50),
+        "collectedKey": (140, 110, 35),
+
+        "transition": (180, 30, 60),
+        "groundEnemy": (130, 0, 0),
     }, 
 }
