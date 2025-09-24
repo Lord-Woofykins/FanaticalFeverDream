@@ -34,14 +34,16 @@ class Door(Platform):
         self.platformType = "openDoor"
 
 class Transition(Platform):
-    def __init__(self, x, y, width, height, platformType, targetRoom, playerSpawnX, playerSpawnY, theme):
+    def __init__(self, x, y, width, height, platformType, direction, theme, roomGenerationCallback):
         super().__init__(x, y, width, height, platformType, theme)
-        self.targetRoom = targetRoom
-        self.playerSpawnX = playerSpawnX
-        self.playerSpawnY = playerSpawnY
+        self.direction = direction
+        self.generateMapSection = roomGenerationCallback
 
     def trigger(self, gameManager, camera):
-        gameManager.changeRoom(self.targetRoom, self.playerSpawnX*50, self.playerSpawnY*50, camera)
+        targetRoom, playerSpawnX, playerSpawnY = self.generateMapSection(self.direction)
+
+
+        gameManager.changeRoom(targetRoom, playerSpawnX*50, playerSpawnY*50, camera)
 
 class Key(Platform):
     def __init__(self, x, y, width, height, platformType, targetInteractive, theme):

@@ -1,13 +1,14 @@
+import random
+
 from Platforms import Platform, Door, Transition, Key
 from Enemies import GroundEnemy
 from ColourPalettes import themeColourPalettes
 from RoomLayouts import rooms as roomLayouts
 
 class Room:
-    def __init__(self, currentRoom="1_1", theme="Dungeon"):
+    def __init__(self, theme="Dungeon"):
         self.width = 1100
         self.height = 800
-        self.currentRoom = currentRoom
         self.theme = theme
         self.rows = 16
         self.columns = 22
@@ -18,8 +19,8 @@ class Room:
         self.enemies = []
 
         # Pulling Room Data from RoomLayouts
-        self.triggers = roomLayouts.get(f"{currentRoom}Interactives", {})
-        self.roomTransitions = roomLayouts.get(f"{currentRoom}Transitions", {})
+        self.triggers = roomLayouts.get(f"{self.currentRoom}Interactives", {})
+        self.roomTransitions = roomLayouts.get(f"{self.currentRoom}Transitions", {})
 
         self.roomConnections = {}
         for key in roomLayouts:
@@ -31,6 +32,77 @@ class Room:
                     self.roomConnections[room] = directions
                 except Exception as error:
                     print(f"{key} failed to provide directions: {error}")
+        
+        
+        self.compatibleConnections = {
+            "left": "right",
+            "up": "down",
+            "right": "up"
+        }
+
+        self.dungeonMap = {}
+
+        self.dungeonMapExample = {
+            (self.startRoom, "right"): {
+                ("1_2", "right"): {
+                    ("2_3", "left"): {},
+                    },
+                ("1_2", "left"): {},
+                },
+        }
+
+        self.currentRoomPathExample = self.dungeonMapExample[(self.startRoom, "right")[("1_2", "right")]]
+
+        self.startRoom = "1_1"
+        self.currentRoom = self.startRoom
+        self.currentRoomPath = self.dungeonMap
+        
+        self.previousDirection = None
+
+    def updateRoomLog(self, direction):
+        if 
+        self.currentRoomPath[(self.currentRoom, direction)] = {}
+
+
+
+        self.dungeonMap[(self.currentRoom, direction)] = {}
+
+
+        {f"{direction}": self.currentRoom} = self.dungeonMap[self.currentRoomPath]
+
+        self.previousDirection = direction
+
+
+
+    def generateMapSection(self, direction):
+        if self.compatibleConnections[direction] == self.previousDirection: # Check if the next direction is where the user came from
+            self.currentRoomPath = 
+            self.retrieve
+        else:
+            roomOptions = [room for room in self.roomConnections if direction in self.roomConnections[room] and room != self.currentRoom]
+            selectedIndex = random.randint(0, len(roomOptions))
+            futureRoom = roomOptions[selectedIndex]
+
+            # Reverse key value pairs
+            directionCoordinateMap = {}
+            for key in roomLayouts[f"{futureRoom}Transitions"]:
+                directionCoordinateMap[roomLayouts[key]] = key
+            
+            directionCoordinates = directionCoordinateMap[direction]
+            xSpawn, ySpawn = directionCoordinates
+            if direction == "left":
+                xSpawn -= 1
+            elif direction == "right":
+                xSpawn += 1
+            elif direction == "up":
+                ySpawn += 2
+            elif direction == "down":
+                ySpawn -= 2
+
+            self.currentRoom = futureRoom
+            self.updateRoomLog(direction)
+
+            return futureRoom, xSpawn, ySpawn
         
     def loadRoom(self):
         """Load the room layout and create platforms"""
@@ -50,12 +122,9 @@ class Room:
                 rectWidth, rectHeight = 50, 50
 
                 # Creating and mapping transitions
-                transitionData = self.roomTransitions.get((x, y))   # Get transition data for this cell
-                if transitionData:  
-                    break
-                    ### Convert direction to room
-                    targetRoom, spawnX, spawnY = transitionData
-                    transitionObj = Transition(xPos, yPos, rectWidth, rectHeight, "transition", targetRoom, spawnX, spawnY, self.theme)
+                directionData = self.roomTransitions.get((x, y))   # Get transition data for this cell
+                if directionData:
+                    transitionObj = Transition(xPos, yPos, rectWidth, rectHeight, "transition", direction, self.theme, self.generateMapSection)
                     self.transitions.append(transitionObj)
 
                 if cellVal == 1:
