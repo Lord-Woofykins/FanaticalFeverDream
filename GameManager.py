@@ -71,5 +71,4 @@ class GameManager:
             clock.tick(self.frametime)
     
     def restart(self):
-        self.changeRoom("1_1", 100, 800, self.camera)
-        self.player.reset()
+        pass

@@ -143,8 +143,11 @@ class Player:
         if self.checkAttackCooldown() == False:
             self.lastAttackTime = py.time.get_ticks()
             self.isAttacking = True
-            collisionManagerCallback(self.getAttackRect(), room)
+            collisionManagerCallback(self.getAttackRect(), room, self.increaseScore)
             self.setAnimation("attack")
+    
+    def increaseScore(self):
+        self.currentScore += 1
 
     def updateGravity(self):
         self.yVelocity += GRAVITY
@@ -252,7 +255,7 @@ class Player:
         self.health -= damage
         if self.health <= 0:
             self.setAnimation("dead")
-            gameManager.restart()
+            
     
     def checkAttackCooldown(self):
         # Compare current time to last attack time
@@ -264,7 +267,7 @@ class Player:
             return True
     
     def reset(self):
-        self.position = startingPosition.copy()
+        self.position = [0, 0]
         self.health = self.maxHealth
         self.height = 64
         self.yVelocity = 0
