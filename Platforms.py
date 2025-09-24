@@ -52,4 +52,5 @@ class Key(Platform):
     def trigger(self):
         if not self.triggered:
             self.triggered = True
+            self.platformType = "collectedKey"
             self.targetInteractive.trigger()

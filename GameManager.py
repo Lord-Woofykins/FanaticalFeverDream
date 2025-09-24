@@ -16,7 +16,7 @@ class GameManager:
         print(f"Spawning player at: ({playerX}, {playerY})")
         
         # Create and load the new room
-        self.currentRoom = Room(futureRoom)
+        self.currentRoom = Room()
         self.currentRoom.loadRoom()
         
         # Position the player at the spawn point

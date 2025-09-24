@@ -1,6 +1,6 @@
 import pygame as py
 import os
-startingPosition = [100, 800]
+startingPosition = [550, 550]
 GRAVITY = 0.5
 
 

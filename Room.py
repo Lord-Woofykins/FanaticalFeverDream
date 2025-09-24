@@ -6,10 +6,10 @@ from ColourPalettes import themeColourPalettes
 from RoomLayouts import rooms as roomLayouts
 
 class Room:
-    def __init__(self, theme="Dungeon"):
+    def __init__(self):
         self.width = 1100
         self.height = 800
-        self.theme = theme
+        self.theme = "Dungeon"
         self.rows = 16
         self.columns = 22
 
@@ -141,7 +141,12 @@ class Room:
                     platformObj = Platform(xPos, yPos, rectWidth, rectHeight, "platform", self.theme)
                     self.platforms.append(platformObj)
                 elif cellVal == 2:
-                    doorObj = Door(xPos, yPos, rectWidth, rectHeight+50, "openDoor", self.theme)
+                    # Adjust door dimensions in case door is on top or bottom
+                    if y == 0 or y == 15:
+                        rectWidth += 50
+                    else:
+                        rectHeight += 50
+                    doorObj = Door(xPos, yPos, rectWidth, rectHeight, "closedDoor", self.theme)
                     self.platforms.append(doorObj)
                     interactiveMap[(x, y)] = doorObj
                 elif int(cellVal/10) == 2:
