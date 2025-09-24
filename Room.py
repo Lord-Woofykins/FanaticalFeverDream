@@ -18,6 +18,19 @@ class Room:
         self.transitions = []
         self.enemies = []
 
+        self.compatibleConnections = {
+            "left": "right",
+            "up": "down",
+            "right": "left"
+        }
+
+        self.initialDungeonMap = {}
+        self.dungeonMap = {}
+        self.startRoom = "1_1"
+        self.currentRoom = self.startRoom
+        self.currentRoomPath = self.dungeonMap
+        self.playerPath = []
+
         # Pulling Room Data from RoomLayouts
         self.triggers = roomLayouts.get(f"{self.currentRoom}Interactives", {})
         self.roomTransitions = roomLayouts.get(f"{self.currentRoom}Transitions", {})
@@ -32,16 +45,8 @@ class Room:
                     self.roomConnections[room] = directions
                 except Exception as error:
                     print(f"{key} failed to provide directions: {error}")
-        
-        
-        self.compatibleConnections = {
-            "left": "right",
-            "up": "down",
-            "right": "up"
-        }
 
-        self.dungeonMap = {}
-
+    """
         self.dungeonMapExample = {
             (self.startRoom, "right"): {
                 ("1_2", "right"): {
@@ -51,39 +56,11 @@ class Room:
                 },
         }
 
-        self.currentRoomPathExample = self.dungeonMapExample[(self.startRoom, "right")[("1_2", "right")]]
+        self.currentRoomPathExample = self.dungeonMapExample[(self.startRoom, "right")][("1_2", "right")]
+    """
 
-        self.startRoom = "1_1"
-        self.currentRoom = self.startRoom
-        self.currentRoomPath = self.dungeonMap
-        
-        self.previousDirection = None
-
-    def updateRoomLog(self, direction):
-        if 
-        self.currentRoomPath[(self.currentRoom, direction)] = {}
-
-
-
-        self.dungeonMap[(self.currentRoom, direction)] = {}
-
-
-        {f"{direction}": self.currentRoom} = self.dungeonMap[self.currentRoomPath]
-
-        self.previousDirection = direction
-
-
-
-    def generateMapSection(self, direction):
-        if self.compatibleConnections[direction] == self.previousDirection: # Check if the next direction is where the user came from
-            self.currentRoomPath = 
-            self.retrieve
-        else:
-            roomOptions = [room for room in self.roomConnections if direction in self.roomConnections[room] and room != self.currentRoom]
-            selectedIndex = random.randint(0, len(roomOptions))
-            futureRoom = roomOptions[selectedIndex]
-
-            # Reverse key value pairs
+    def retrieveSpawnCoordinates(self, direction, futureRoom):
+        # Reverse key value pairs
             directionCoordinateMap = {}
             for key in roomLayouts[f"{futureRoom}Transitions"]:
                 directionCoordinateMap[roomLayouts[key]] = key
@@ -100,10 +77,43 @@ class Room:
                 ySpawn -= 2
 
             self.currentRoom = futureRoom
-            self.updateRoomLog(direction)
-
             return futureRoom, xSpawn, ySpawn
+
+    def generateMapSection(self, direction):
+        if len(self.playerPath) >= 2 and self.compatibleConnections[direction] in self.playerPath[-2]: # Check if the next direction is where the user came from
+            self.playerPath.pop() # Remove last place the player was in
+
+            # Update room path to previous location
+            self.currentRoomPath = self.initialDungeonMap
+            for pathKey in self.playerPath:
+                self.currentRoomPath = self.currentRoomPath[pathKey]
+            
+            futureRoom, oppositeDirection = self.playerPath[-1] # Find the future room using final tuple in player's path
         
+        elif self.compatibleConnections[direction] in self.currentRoomPath:
+            self.playerPath.append(self.currentRoomPath)
+            
+            # Update room path to previous location
+            self.currentRoomPath = self.initialDungeonMap
+            for pathKey in self.playerPath:
+                self.currentRoomPath = self.currentRoomPath[pathKey]
+            
+            futureRoom, oppositeDirection = self.playerPath[-1] # Find the future room using final tuple in player's path
+
+        else:
+            # Retrieve all rooms which have correct available directions
+            roomOptions = [room for room in self.roomConnections if direction in self.roomConnections[room] and room != self.currentRoom]
+            selectedIndex = random.randint(0, len(roomOptions)-1)
+            futureRoom = roomOptions[selectedIndex]
+
+            futureTuple = (futureRoom, direction)
+            self.dungeonMap[self.currentRoomPath] = futureTuple
+            print(self.dungeonMap)
+            self.currentRoomPath[futureTuple] = {}
+            self.playerPath.append(futureTuple)
+        
+        return self.retrieveSpawnCoordinates(direction, futureRoom)
+            
     def loadRoom(self):
         """Load the room layout and create platforms"""
         # Clear Existing Room Data
@@ -124,7 +134,7 @@ class Room:
                 # Creating and mapping transitions
                 directionData = self.roomTransitions.get((x, y))   # Get transition data for this cell
                 if directionData:
-                    transitionObj = Transition(xPos, yPos, rectWidth, rectHeight, "transition", direction, self.theme, self.generateMapSection)
+                    transitionObj = Transition(xPos, yPos, rectWidth, rectHeight, "transition", directionData, self.theme, self.generateMapSection)
                     self.transitions.append(transitionObj)
 
                 if cellVal == 1:

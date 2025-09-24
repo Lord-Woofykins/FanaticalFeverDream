@@ -65,11 +65,7 @@ class CollisionManager:
         for transition in room.transitions:
             transitionRect = transition.getRect()
             if playerRect.colliderect(transitionRect):
-                try:
-                    transition.trigger(gameManager, camera)
-                except:
-                    print("Transition Failed To Trigger")
-                    continue
+                transition.trigger(gameManager, camera)
 
     def checkEnemyCollisions(self, player, enemies, gameManager):
         playerRect = player.getRect()

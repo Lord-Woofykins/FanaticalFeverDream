@@ -41,8 +41,6 @@ class Transition(Platform):
 
     def trigger(self, gameManager, camera):
         targetRoom, playerSpawnX, playerSpawnY = self.generateMapSection(self.direction)
-
-
         gameManager.changeRoom(targetRoom, playerSpawnX*50, playerSpawnY*50, camera)
 
 class Key(Platform):
