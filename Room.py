@@ -5,6 +5,8 @@ from Enemies import GroundEnemy
 from ColourPalettes import themeColourPalettes
 from RoomLayouts import rooms as roomLayouts
 
+from roomStorage import roomStorage # Required since room gets deleted and rebuilt every so often
+
 class Room:
     def __init__(self):
         self.width = 1100
@@ -25,11 +27,8 @@ class Room:
         }
 
         self.initialDungeonMap = {}
-        self.dungeonMap = {}
         self.startRoom = "1_1"
-        self.currentRoom = self.startRoom
-        self.currentRoomPath = self.dungeonMap
-        self.playerPath = []
+        self.pullRoomStorage()
 
         # Pulling Room Data from RoomLayouts
         self.triggers = roomLayouts.get(f"{self.currentRoom}Interactives", {})
@@ -58,25 +57,40 @@ class Room:
 
         self.currentRoomPathExample = self.dungeonMapExample[(self.startRoom, "right")][("1_2", "right")]
     """
+    def pullRoomStorage(self):
+        self.dungeonMap = roomStorage["dungeonMap"]
+        self.currentRoom = roomStorage["currentRoom"]
+        self.currentRoomPath = roomStorage["currentRoomPath"]
+        self.playerPath = roomStorage["playerPath"]
+    
+    def pushRoomStorage(self):
+        roomStorage["dungeonMap"] = self.dungeonMap
+        roomStorage["currentRoom"] = self.currentRoom
+        roomStorage["currentRoomPath"] = self.currentRoomPath
+        roomStorage["playerPath"] = self.playerPath
 
     def retrieveSpawnCoordinates(self, direction, futureRoom):
         # Reverse key value pairs
             directionCoordinateMap = {}
             for key in roomLayouts[f"{futureRoom}Transitions"]:
-                directionCoordinateMap[roomLayouts[key]] = key
+                directionCoordinateMap[roomLayouts[f"{futureRoom}Transitions"][key]] = key
             
-            directionCoordinates = directionCoordinateMap[direction]
+            realDirection = self.compatibleConnections[direction] # Find the direction relevant to the transition (future room perspective)
+            # Retrieving player spawn coordinates
+            directionCoordinates = directionCoordinateMap[realDirection]
             xSpawn, ySpawn = directionCoordinates
-            if direction == "left":
-                xSpawn -= 1
-            elif direction == "right":
-                xSpawn += 1
-            elif direction == "up":
+
+            if realDirection == "left":
+                xSpawn += 2
+            elif realDirection == "right":
+                xSpawn -= 2
+            elif realDirection == "up":
                 ySpawn += 2
-            elif direction == "down":
+            elif realDirection == "down":
                 ySpawn -= 2
 
             self.currentRoom = futureRoom
+            self.pushRoomStorage()
             return futureRoom, xSpawn, ySpawn
 
     def generateMapSection(self, direction):
@@ -106,10 +120,19 @@ class Room:
             selectedIndex = random.randint(0, len(roomOptions)-1)
             futureRoom = roomOptions[selectedIndex]
 
-            futureTuple = (futureRoom, direction)
-            self.dungeonMap[self.currentRoomPath] = futureTuple
+
+            futureTuple = (self.currentRoom, direction)
+            if not self.dungeonMap:
+                    self.dungeonMap[futureTuple] = {}
+                    self.currentRoomPath = self.dungeonMap[futureTuple]
+            else:
+                    # Add new room inside the current path
+                    self.currentRoomPath[futureTuple] = {}
+                    self.currentRoomPath = self.currentRoomPath[futureTuple]  # move pointer into nested dict
+
+            self.playerPath.append(futureTuple)
             print(self.dungeonMap)
-            self.currentRoomPath[futureTuple] = {}
+
             self.playerPath.append(futureTuple)
         
         return self.retrieveSpawnCoordinates(direction, futureRoom)
