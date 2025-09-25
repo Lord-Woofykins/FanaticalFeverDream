@@ -8,6 +8,7 @@ class Player:
     def __init__(self, camera, width=40, height=64):
         self.camera = camera
 
+        self.startPosition = startingPosition.copy()
         self.position = startingPosition.copy()
         self.width = width
         self.height = height
@@ -255,7 +256,8 @@ class Player:
         self.health -= damage
         if self.health <= 0:
             self.setAnimation("dead")
-            
+            gameManager.restart()
+
     
     def checkAttackCooldown(self):
         # Compare current time to last attack time

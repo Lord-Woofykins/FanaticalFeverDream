@@ -1,6 +1,7 @@
 import pygame as py
 import sys
 from Room import Room
+from roomStorage import roomStorage
 WIDTH, HEIGHT = 1100, 800
 
 class GameManager:
@@ -9,6 +10,7 @@ class GameManager:
         self.player = player
         self.camera = camera
         self.frametime = frametime
+        self.room = None
         
     def changeRoom(self, futureRoom, playerX, playerY, camera):
         """Change to a new room and position the player"""
@@ -71,4 +73,10 @@ class GameManager:
             clock.tick(self.frametime)
     
     def restart(self):
-        pass
+        playerX, playerY = self.player.startPosition
+        roomStorage["dungeonMap"] =  {}
+        roomStorage["currentRoom"] =  "1_1"
+        roomStorage["currentRoomPath"] = {}
+        roomStorage["playerPath"] = []
+        self.player.health = 100
+        self.changeRoom("1_1", playerX, playerY, self.camera)
