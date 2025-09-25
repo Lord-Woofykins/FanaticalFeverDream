@@ -60,13 +60,13 @@ class Room:
     """
     def pullRoomStorage(self):
         self.dungeonMap = saveGame["dungeonMap"]
-        self.currentRoom = saveGame["currentRoom"]
+        self.currentRoom = str(saveGame["currentRoom"])
         self.currentRoomPath = saveGame["currentRoomPath"]
         self.playerPath = saveGame["playerPath"]
     
     def pushRoomStorage(self):
         saveGame["dungeonMap"] = self.dungeonMap
-        saveGame["currentRoom"] = self.currentRoom
+        saveGame["currentRoom"] = str(self.currentRoom)
         saveGame["currentRoomPath"] = self.currentRoomPath
         saveGame["playerPath"] = self.playerPath
 
@@ -95,7 +95,8 @@ class Room:
             return futureRoom, xSpawn, ySpawn
 
     def generateMapSection(self, direction):
-        if len(self.playerPath) >= 2 and self.compatibleConnections[direction] in self.playerPath[-2]: # Check if the next direction is where the user came from
+        if len(self.playerPath) >= 1 and self.compatibleConnections[direction] in self.playerPath[-1]: # Check if the next direction is where the user came from
+            print("Triggered previous room generation")
             self.playerPath.pop() # Remove last place the player was in
 
             # Update room path to previous location

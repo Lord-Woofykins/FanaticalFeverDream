@@ -1,3 +1,5 @@
+import ast
+
 class SaveManager:
     def __init__(self, fileName="permanentSaveFile.txt"):
         self.fileName = fileName
@@ -6,7 +8,7 @@ class SaveManager:
         try:
             with open(self.fileName, 'w') as file:
                 for key, value in saveGame.items():
-                    file.write(f"{key} {value}\n")
+                    file.write(f"{key} {repr(value)}\n")
         except Exception as error:
             print(f"Error saving game: {error}")
     
@@ -49,33 +51,11 @@ class SaveManager:
     def parseValue(self, valueStr):
         """Convert string representation back to original data type"""
         valueStr = valueStr.strip()
-        
-        # Handle lists [550, 550] or []
-        if valueStr.startswith('[') and valueStr.endswith(']'):
-            try:
-                # Use eval for simple lists (be careful with this in production!)
-                return eval(valueStr)
-            except:
-                return []
-        
-        # Handle dictionaries {} 
-        if valueStr.startswith('{') and valueStr.endswith('}'):
-            try:
-                return eval(valueStr) if valueStr != '{}' else {}
-            except:
-                return {}
-        
-        # Handle integers
         try:
-            return int(valueStr)
-        except ValueError:
-            pass
-        
-        # Handle floats
-        try:
-            return float(valueStr)
-        except ValueError:
-            pass
-        
-        # Return as string
-        return valueStr
+            value = ast.literal_eval(valueStr)
+            # Compatibility guard: if value is int but original string contains underscore, return original string
+            if isinstance(value, int) and '_' in valueStr:
+                return valueStr
+            return value
+        except:
+            return valueStr
