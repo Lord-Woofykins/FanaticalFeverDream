@@ -130,6 +130,13 @@ while running:
     
     mainCharacter.clampPosition(WIDTH, HEIGHT)
 
+    i = 0
+    if room.playerPath:
+        for element in room.playerPath:
+            if "up" in element:
+                i += 1
+                if i == 10:
+                    titleScreen.winScreen()
     # Update the display
     py.display.flip()
     clock.tick(gameManager.frametime)

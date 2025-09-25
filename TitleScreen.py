@@ -106,11 +106,11 @@ class TitleScreen:
         screen = py.display.get_surface()
         font = self.bodyFont
         prompt = font.render(f"Press a key for {action}", True, self.white)
-        rect = prompt.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        promptRect = prompt.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         
         while waiting:
             screen.fill(self.black)
-            screen.blit(prompt, rect)
+            screen.blit(prompt, promptRect)
             py.display.flip()
             
             for event in py.event.get():
@@ -120,3 +120,22 @@ class TitleScreen:
                 if event.type == py.KEYDOWN:
                     keybinds[action] = event.key
                     waiting = False
+    def winScreen(self):
+        waiting = True
+        screen = py.display.get_surface()
+        font = self.bodyFont
+        winText = font.render(f"You Have Escaped, Well Done", True, self.white)
+        winRect = winText.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        
+        while waiting:
+            screen.fill(self.black)
+            screen.blit(winText, winRect)
+            py.display.flip()
+            
+            for event in py.event.get():
+                if event.type == py.QUIT:
+                    py.quit()
+                    sys.exit()
+                if event.type == py.KEYDOWN:
+                    py.quit()
+                    sys.exit()
