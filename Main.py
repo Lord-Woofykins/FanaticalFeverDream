@@ -117,6 +117,8 @@ while running:
         enemy.patrol()
         enemy.draw(camera)
         collisionManager.checkEnemyCollisions(mainCharacter, room.enemies, gameManager)
+    
+    mainCharacter.clampPosition(WIDTH, HEIGHT)
 
     # Update the display
     py.display.flip()

@@ -1,6 +1,6 @@
 playerHealth 100
 playerScore 0
-playerPosition [100, 718.0]
-dungeonMap {('1_1', 'right'): {}}
-currentRoom '1_2'
-playerPath [('1_1', 'right')]
+playerPosition [564, 196977.5]
+dungeonMap {('1_1', 'up'): {('1_1', 'up'): {}}}
+currentRoom '1_4'
+playerPath [('1_1', 'up')]

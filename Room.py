@@ -88,7 +88,7 @@ class Room:
 
             self.currentRoom = futureRoom
             self.pushRoomStorage()
-            return futureRoom, xSpawn, ySpawn
+            return futureRoom, xSpawn+1, ySpawn+1
 
     def generateMapSection(self, direction):
         print("Beginning of generate map dection variables", self.playerPath, self.dungeonMap)
@@ -105,7 +105,10 @@ class Room:
             for pathKey in self.playerPath:
                 currentRoomKey = currentRoomKey[pathKey]
             
-            futureRoom, oppositeDirection = self.playerPath[-1] # Find the future room using final tuple in player's path
+            if self.playerPath:  # only access last element if it exists
+                futureRoom, oppositeDirection = self.playerPath[-1] # Find the future room using final tuple in player's path
+            else:
+                futureRoom, oppositeDirection = self.startRoom, direction
         
         elif len(self.playerPath) >= 1 and direction in currentRoomKey: # Check if the next direction is in one of the next rooms
             print("Trigerred next room generation")

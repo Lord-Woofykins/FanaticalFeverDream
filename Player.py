@@ -277,3 +277,19 @@ class Player:
         self.onGround = False
         self.isCrouching = False
         self.stand()
+    
+    def clampPosition(self, windowWidth, windowHeight):
+        halfWidth = self.width / 2
+        halfHeight = self.height / 2
+
+        # Clamp X
+        if self.position[0] - halfWidth < 0:
+            self.position[0] = halfWidth
+        elif self.position[0] + halfWidth > windowWidth:
+            self.position[0] = windowWidth - halfWidth
+
+        # Clamp Y
+        if self.position[1] - halfHeight < 0:
+            self.position[1] = halfHeight
+        elif self.position[1] + halfHeight > windowHeight:
+            self.position[1] = windowHeight - halfHeight

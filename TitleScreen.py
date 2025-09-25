@@ -83,7 +83,6 @@ class TitleScreen:
                             saveGame["playerPosition"] = loadedData["playerPosition"]
                             saveGame["dungeonMap"] =  loadedData["dungeonMap"]
                             saveGame["currentRoom"] =  loadedData["currentRoom"]
-                            saveGame["currentRoomPath"] = loadedData["currentRoomPath"]
                             saveGame["playerPath"] = loadedData["playerPath"]
                             loadSaveCallback()
                         running = False
