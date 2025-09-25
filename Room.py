@@ -27,7 +27,6 @@ class Room:
             "right": "left"
         }
 
-        self.initialDungeonMap = {}
         self.startRoom = "1_1"
         self.pullRoomStorage()
 
@@ -39,7 +38,6 @@ class Room:
         for key in roomLayouts:
             if "Transitions" in key:
                 try:
-                    print(key)
                     directions = list(roomLayouts[key].values())  # Get the direction values
                     room = key.replace("Transitions", "")  # Extract room name (e.g., "1_1" from "1_1Transitions")
                     self.roomConnections[room] = directions
@@ -61,13 +59,11 @@ class Room:
     def pullRoomStorage(self):
         self.dungeonMap = saveGame["dungeonMap"]
         self.currentRoom = str(saveGame["currentRoom"])
-        self.currentRoomPath = saveGame["currentRoomPath"]
         self.playerPath = saveGame["playerPath"]
     
     def pushRoomStorage(self):
         saveGame["dungeonMap"] = self.dungeonMap
         saveGame["currentRoom"] = str(self.currentRoom)
-        saveGame["currentRoomPath"] = self.currentRoomPath
         saveGame["playerPath"] = self.playerPath
 
     def retrieveSpawnCoordinates(self, direction, futureRoom):
@@ -95,47 +91,60 @@ class Room:
             return futureRoom, xSpawn, ySpawn
 
     def generateMapSection(self, direction):
+        print("Beginning of generate map dection variables", self.playerPath, self.dungeonMap)
+        # Generate room key to determine direction leading there
+        currentRoomKey = self.dungeonMap
+        for pathKey in self.playerPath:
+            currentRoomKey = currentRoomKey[pathKey]
         if len(self.playerPath) >= 1 and self.compatibleConnections[direction] in self.playerPath[-1]: # Check if the next direction is where the user came from
             print("Triggered previous room generation")
             self.playerPath.pop() # Remove last place the player was in
 
             # Update room path to previous location
-            self.currentRoomPath = self.initialDungeonMap
+            currentRoomKey = self.dungeonMap
             for pathKey in self.playerPath:
-                self.currentRoomPath = self.currentRoomPath[pathKey]
+                currentRoomKey = currentRoomKey[pathKey]
             
             futureRoom, oppositeDirection = self.playerPath[-1] # Find the future room using final tuple in player's path
         
-        elif self.compatibleConnections[direction] in self.currentRoomPath:
-            self.playerPath.append(self.currentRoomPath)
+        elif len(self.playerPath) >= 1 and direction in currentRoomKey: # Check if the next direction is in one of the next rooms
+            print("Trigerred next room generation")
+            self.playerPath.append(currentRoomKey) # Add to player's path
             
             # Update room path to previous location
-            self.currentRoomPath = self.initialDungeonMap
+            currentRoomKey = self.dungeonMap
             for pathKey in self.playerPath:
-                self.currentRoomPath = self.currentRoomPath[pathKey]
-            
+                currentRoomKey = currentRoomKey[pathKey]
+
+            futureRoom, direction = currentRoomKey            
             futureRoom, oppositeDirection = self.playerPath[-1] # Find the future room using final tuple in player's path
 
-        else:
+        else: # When player ventures into new territory
+            """Generating Next Room"""
             # Retrieve all rooms which have correct available directions
             roomOptions = [room for room in self.roomConnections if direction in self.roomConnections[room] and room != self.currentRoom]
+            # Choose a room from compatible options
             selectedIndex = random.randint(0, len(roomOptions)-1)
             futureRoom = roomOptions[selectedIndex]
 
+            """Logging room changes"""
 
+            # Create tuple to log path
             futureTuple = (self.currentRoom, direction)
-            if not self.dungeonMap:
-                    self.dungeonMap[futureTuple] = {}
-                    self.currentRoomPath = self.dungeonMap[futureTuple]
-            else:
-                    # Add new room inside the current path
-                    self.currentRoomPath[futureTuple] = {}
-                    self.currentRoomPath = self.currentRoomPath[futureTuple]  # move pointer into nested dict
 
+            # Keep a log of the path the player has taken in list form
             self.playerPath.append(futureTuple)
-            print(self.dungeonMap)
+            
+            # Find path to current room (value)
+            currentRoomKey = self.dungeonMap # Derive overall map
+            for pathKey in self.playerPath: # Go through all previous directions taken
+                if pathKey not in currentRoomKey:
+                    currentRoomKey[pathKey] = {} # create empty dict if missing
+                currentRoomKey = currentRoomKey[pathKey]
 
-            self.playerPath.append(futureTuple)
+            currentRoomKey[futureTuple] = {} # Add room to dungeon map
+            
+            print(f"Dungeon map: {self.dungeonMap}, Player path: {self.playerPath}")
         
         return self.retrieveSpawnCoordinates(direction, futureRoom)
             

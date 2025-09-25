@@ -78,7 +78,6 @@ class GameManager:
         saveGame["playerPosition"] = [550, 550]
         saveGame["dungeonMap"] =  {}
         saveGame["currentRoom"] =  "1_1"
-        saveGame["currentRoomPath"] = {}
         saveGame["playerPath"] = []
         self.player.health = 100
         playerX, playerY = saveGame["playerPosition"]
@@ -95,6 +94,5 @@ class GameManager:
         saveGame["playerPosition"] = self.player.position
         saveGame["dungeonMap"] =  self.currentRoom.dungeonMap
         saveGame["currentRoom"] =  self.currentRoom.currentRoom
-        saveGame["currentRoomPath"] = self.currentRoom.currentRoomPath
         saveGame["playerPath"] = self.currentRoom.playerPath
         print(saveGame)
