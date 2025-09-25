@@ -1,0 +1,6 @@
+playerHealth 100
+playerPosition [552.0, 718.5]
+dungeonMap {}
+currentRoom 11
+currentRoomPath {}
+playerPath []

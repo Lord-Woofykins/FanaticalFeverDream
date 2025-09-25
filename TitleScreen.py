@@ -1,9 +1,10 @@
 import pygame as py
 import sys
 from ColourPalettes import themeColourPalettes
+from saveFile import saveGame
 
 class TitleScreen:
-    def __init__(self, saveManager=None):
+    def __init__(self):
         self.antialiasing = False
 
         # Store a local reference to colours for easy access
@@ -39,7 +40,6 @@ class TitleScreen:
         }
 
         self.selectedOption = 0 # 0 for new game, 1 for continue, etc.
-        self.saveManager = saveManager
 
         self.clock = py.time.Clock()
 
@@ -62,7 +62,7 @@ class TitleScreen:
         
         py.display.flip()
 
-    def run(self):
+    def run(self, restartGameCallback, loadSaveCallback, loadGameDataCallback):
         running = True
         while running:
             for event in py.event.get():
@@ -74,13 +74,17 @@ class TitleScreen:
                         py.quit()
                         sys.exit()
                     if event.key == py.K_RETURN:
-                        if self.selectedOption == 1:
-                            try:
-                                self.saveManager.loadGame()
-                            except FileNotFoundError:
-                                print("No save file found, starting new game")
-                            except Exception as e:
-                                print(f"Error loading save file: {e}")
+                        if self.selectedOption == 0:                            
+                            restartGameCallback()
+                        elif self.selectedOption == 1:
+                            loadedData = loadGameDataCallback()
+                            saveGame["playerHealth"] = loadedData["playerHealth"]
+                            saveGame["playerPosition"] = loadedData["playerPosition"]
+                            saveGame["dungeonMap"] =  loadedData["dungeonMap"]
+                            saveGame["currentRoom"] =  loadedData["currentRoom"]
+                            saveGame["currentRoomPath"] = loadedData["currentRoomPath"]
+                            saveGame["playerPath"] = loadedData["playerPath"]
+                            loadSaveCallback()
                         running = False
                     if event.key == py.K_UP or event.key == py.K_w:
                         self.selectedOption = max(0, self.selectedOption - 1)

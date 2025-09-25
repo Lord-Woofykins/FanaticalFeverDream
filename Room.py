@@ -6,6 +6,7 @@ from ColourPalettes import themeColourPalettes
 from RoomLayouts import rooms as roomLayouts
 
 from roomStorage import roomStorage # Required since room gets deleted and rebuilt every so often
+from saveFile import saveGame
 
 class Room:
     def __init__(self):
@@ -58,16 +59,16 @@ class Room:
         self.currentRoomPathExample = self.dungeonMapExample[(self.startRoom, "right")][("1_2", "right")]
     """
     def pullRoomStorage(self):
-        self.dungeonMap = roomStorage["dungeonMap"]
-        self.currentRoom = roomStorage["currentRoom"]
-        self.currentRoomPath = roomStorage["currentRoomPath"]
-        self.playerPath = roomStorage["playerPath"]
+        self.dungeonMap = saveGame["dungeonMap"]
+        self.currentRoom = saveGame["currentRoom"]
+        self.currentRoomPath = saveGame["currentRoomPath"]
+        self.playerPath = saveGame["playerPath"]
     
     def pushRoomStorage(self):
-        roomStorage["dungeonMap"] = self.dungeonMap
-        roomStorage["currentRoom"] = self.currentRoom
-        roomStorage["currentRoomPath"] = self.currentRoomPath
-        roomStorage["playerPath"] = self.playerPath
+        saveGame["dungeonMap"] = self.dungeonMap
+        saveGame["currentRoom"] = self.currentRoom
+        saveGame["currentRoomPath"] = self.currentRoomPath
+        saveGame["playerPath"] = self.playerPath
 
     def retrieveSpawnCoordinates(self, direction, futureRoom):
         # Reverse key value pairs

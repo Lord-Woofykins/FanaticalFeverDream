@@ -2,6 +2,7 @@ import pygame as py
 import sys
 from Room import Room
 from roomStorage import roomStorage
+from saveFile import saveGame
 WIDTH, HEIGHT = 1100, 800
 
 class GameManager:
@@ -10,7 +11,6 @@ class GameManager:
         self.player = player
         self.camera = camera
         self.frametime = frametime
-        self.room = None
         
     def changeRoom(self, futureRoom, playerX, playerY, camera):
         """Change to a new room and position the player"""
@@ -73,10 +73,26 @@ class GameManager:
             clock.tick(self.frametime)
     
     def restart(self):
-        playerX, playerY = self.player.startPosition
-        roomStorage["dungeonMap"] =  {}
-        roomStorage["currentRoom"] =  "1_1"
-        roomStorage["currentRoomPath"] = {}
-        roomStorage["playerPath"] = []
+        saveGame["playerHealth"] = 100
+        saveGame["playerPosition"] = [550, 550]
+        saveGame["dungeonMap"] =  {}
+        saveGame["currentRoom"] =  "1_1"
+        saveGame["currentRoomPath"] = {}
+        saveGame["playerPath"] = []
         self.player.health = 100
+        playerX, playerY = saveGame["playerPosition"]
         self.changeRoom("1_1", playerX, playerY, self.camera)
+    
+    def loadSaveData(self):
+        self.player.health = saveGame["playerHealth"]
+        self.player.position = saveGame["playerPosition"]
+        self.currentRoom.pullRoomStorage()
+    
+    def saveGame(self):
+        saveGame["playerHealth"] = self.player.health
+        saveGame["playerPosition"] = self.player.position
+        saveGame["dungeonMap"] =  self.currentRoom.dungeonMap
+        saveGame["currentRoom"] =  self.currentRoom.currentRoom
+        saveGame["currentRoomPath"] = self.currentRoom.currentRoomPath
+        saveGame["playerPath"] = self.currentRoom.playerPath
+        print(saveGame)

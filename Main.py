@@ -9,6 +9,8 @@ from TitleScreen import TitleScreen
 from uiManager import uiManager
 from CollisionManager import CollisionManager
 from GameManager import GameManager
+from saveManager import SaveManager
+from saveFile import saveGame
 
 py.init() # Initialize Pygame Modules
 
@@ -23,11 +25,11 @@ screen = py.display.get_surface()
 clock = py.time.Clock()
 
 titleScreen = TitleScreen()
-titleScreen.run()
 
 # Create game objects
 camera = Camera()
 mainCharacter = Player(camera)
+saveManager = SaveManager()
 
 
 # Create gameManagers
@@ -42,6 +44,7 @@ room = gameManager.currentRoom
 uiManager = uiManager()
 collisionManager = CollisionManager(room)
 
+titleScreen.run(gameManager.restart, gameManager.loadSaveData, saveManager.loadGameData)
 
 """Main game loop"""
 running = True
@@ -53,10 +56,13 @@ while running:
     for event in py.event.get():
         # Quit game
         if event.type == py.QUIT:
+            gameManager.saveGame()
             running = False
         if event.type == py.KEYDOWN:
             if event.key == py.K_ESCAPE:
-                running = False
+                gameManager.saveGame() # Save to memory
+                saveManager.saveGameData(saveGame) # Save to permanent file
+                titleScreen.run(gameManager.restart, gameManager.loadSaveData, saveManager.loadGameData)
         # Movement events
             if event.key == py.K_s or event.key == py.K_DOWN:
                 mainCharacter.crouch()
