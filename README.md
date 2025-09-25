@@ -12,3 +12,6 @@ Exit Game -- ESCAPE x 2 (or once from pause menu)
 2. Saving the game
 3. Custom keybinds
 4. Pause menu
+
+## Win Condition
+To win, you must climb 10 levels from the cell to escape the dungeons and life your life in freedom.
