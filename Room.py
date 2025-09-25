@@ -24,7 +24,8 @@ class Room:
         self.compatibleConnections = {
             "left": "right",
             "up": "down",
-            "right": "left"
+            "right": "left",
+            "down": "up"
         }
 
         self.startRoom = "1_1"
@@ -74,7 +75,11 @@ class Room:
             
             realDirection = self.compatibleConnections[direction] # Find the direction relevant to the transition (future room perspective)
             # Retrieving player spawn coordinates
-            directionCoordinates = directionCoordinateMap[realDirection]
+            print(directionCoordinateMap)
+            try:
+                directionCoordinates = directionCoordinateMap[realDirection]
+            except KeyError:
+                directionCoordinates =  11, 11
             xSpawn, ySpawn = directionCoordinates
 
             if realDirection == "left":

@@ -44,7 +44,17 @@ room = gameManager.currentRoom
 uiManager = uiManager()
 collisionManager = CollisionManager(room)
 
-titleScreen.run(gameManager.restart, gameManager.loadSaveData, saveManager.loadGameData)
+# Default keybinds
+keybinds = {
+    "jump": py.K_w,
+    "crouch": py.K_s,
+    "attack": py.K_j,
+    "left": py.K_a,
+    "right": py.K_d
+}
+
+# Begin game
+titleScreen.run(gameManager.restart, gameManager.loadSaveData, saveManager.loadGameData, keybinds)
 
 """Main game loop"""
 running = True
@@ -62,25 +72,25 @@ while running:
             if event.key == py.K_ESCAPE:
                 gameManager.saveGame() # Save to memory
                 saveManager.saveGameData(saveGame) # Save to permanent file
-                titleScreen.run(gameManager.restart, gameManager.loadSaveData, saveManager.loadGameData)
+                titleScreen.run(gameManager.restart, gameManager.loadSaveData, saveManager.loadGameData, keybinds)
         # Movement events
-            if event.key == py.K_s or event.key == py.K_DOWN:
+            if event.key == keybinds["crouch"] or event.key == py.K_DOWN:
                 mainCharacter.crouch()
-            if event.key == py.K_w or event.key == py.K_UP:
+            if event.key == keybinds["jump"] or event.key == py.K_UP:
                 mainCharacter.jump()
-            if event.key == py.K_j or event.key == py.K_z:
+            if event.key == keybinds["attack"] or event.key == py.K_z:
                 mainCharacter.attack(collisionManager.checkEnemyHits, room)
         if event.type == py.KEYUP:
-            if event.key == py.K_s or event.key == py.K_DOWN:
+            if event.key == keybinds["crouch"] or event.key == py.K_DOWN:
                 mainCharacter.stand()
     
     # Handle continuous input
     keys = py.key.get_pressed()
-    if keys[py.K_a] or keys[py.K_d]:
-        if keys[py.K_a]:
+    if keys[keybinds["left"]] or keys[keybinds["right"]]:
+        if keys[keybinds["left"]]:
             mainCharacter.movePlayer(-mainCharacter.acceleration)
             mainCharacter.direction = -1
-        elif keys[py.K_d]:
+        elif keys[keybinds["right"]]:
             mainCharacter.movePlayer(mainCharacter.acceleration)
             mainCharacter.direction = 1
     elif keys[py.K_LEFT] or keys[py.K_RIGHT]:
