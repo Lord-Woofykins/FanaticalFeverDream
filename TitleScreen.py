@@ -79,6 +79,7 @@ class TitleScreen:
                         elif self.selectedOption == 1:
                             loadedData = loadGameDataCallback()
                             saveGame["playerHealth"] = loadedData["playerHealth"]
+                            saveGame["playerScore"] = loadedData["playerScore"]
                             saveGame["playerPosition"] = loadedData["playerPosition"]
                             saveGame["dungeonMap"] =  loadedData["dungeonMap"]
                             saveGame["currentRoom"] =  loadedData["currentRoom"]

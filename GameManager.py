@@ -74,6 +74,7 @@ class GameManager:
     
     def restart(self):
         saveGame["playerHealth"] = 100
+        saveGame["playerScore"] = 0
         saveGame["playerPosition"] = [550, 550]
         saveGame["dungeonMap"] =  {}
         saveGame["currentRoom"] =  "1_1"
@@ -90,6 +91,7 @@ class GameManager:
     
     def saveGame(self):
         saveGame["playerHealth"] = self.player.health
+        saveGame["playerScore"] = self.player.currentScore
         saveGame["playerPosition"] = self.player.position
         saveGame["dungeonMap"] =  self.currentRoom.dungeonMap
         saveGame["currentRoom"] =  self.currentRoom.currentRoom

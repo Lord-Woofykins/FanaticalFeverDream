@@ -1,6 +1,7 @@
-playerHealth 100
-playerPosition [552.0, 718.5]
-dungeonMap {}
-currentRoom 11
+playerHealth 80
+playerScore 0
+playerPosition [559, 718.5]
+dungeonMap {('1_1', 'right'): {}}
+currentRoom 13
 currentRoomPath {}
-playerPath []
+playerPath [('1_1', 'right'), ('1_1', 'right'), (12, 'right'), (12, 'right'), (13, 'right'), (13, 'right')]
